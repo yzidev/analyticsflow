@@ -179,71 +179,71 @@ GET /actuator/metrics
 
 ## Run Locally
 
+Recommended command reference is available in [docs/running.md](docs/running.md). The project also includes a root `Makefile`, so common operations can be run with `make`.
+
+Show all available commands:
+
+```bash
+make help
+```
+
 Start PostgreSQL:
 
 ```bash
-docker compose up -d postgres
+make db-up
 ```
 
-Run the application:
+Run the application locally:
 
 ```bash
-mvn spring-boot:run
+make run
 ```
 
 Or run PostgreSQL and the app through Docker Compose:
 
 ```bash
-docker compose up --build
+make compose-up
 ```
 
 The compose app mounts `./data:/app/data`, so real large files stay in `data/files` and generated reports stay in `data/reports`.
 
-Validate the sample files:
+Validate the default real files directory:
 
 ```bash
-curl -X POST http://localhost:8080/api/files/validate \
-  -H 'Content-Type: application/json' \
-  -d '{}'
+make validate
 ```
 
 Validate the small testing sample:
 
 ```bash
-curl -X POST http://localhost:8080/api/files/validate \
-  -H 'Content-Type: application/json' \
-  -d '{"sampleDirectory":"data/sample"}'
+make validate-sample
 ```
 
 Start the Spring Batch ETL pipeline:
 
 ```bash
-curl -X POST http://localhost:8080/api/jobs/import \
-  -H 'Content-Type: application/json' \
-  -d '{"chunkSize":5000}'
+make import
 ```
 
 Generate a CSV report:
 
 ```bash
-curl -X POST http://localhost:8080/api/reports/generate \
-  -H 'Content-Type: application/json' \
-  -d '{"reportType":"SALES_PRODUCT_SUMMARY","format":"CSV"}'
+make report REPORT_TYPE=SALES_PRODUCT_SUMMARY
 ```
 
 Run a benchmark:
 
 ```bash
-k6 run benchmark/blocking.js
-k6 run benchmark/virtual-thread.js
-k6 run benchmark/completable-future.js
-k6 run benchmark/reactive.js
+make benchmark BENCHMARK=blocking
+make benchmark BENCHMARK=virtual-thread
+make benchmark BENCHMARK=completable-future
+make benchmark BENCHMARK=reactive
 ```
 
 Override runtime load:
 
 ```bash
-BASE_URL=http://localhost:8080 VUS=100 DURATION=1m k6 run benchmark/reactive.js
+make benchmark BENCHMARK=reactive VUS=100 DURATION=1m
 ```
 
 ## Observability
