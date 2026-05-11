@@ -1,0 +1,4 @@
+order_id,user_id,order_date,order_status,total_amount,channel,created_at
+1,1,2024-02-01 10:00:00,delivered,699.48,web,2024-02-01 10:00:00
+2,2,2024-02-02 11:00:00,shipped,149.00,mobile,2024-02-02 11:00:00
+3,3,2024-02-03 12:00:00,cancelled,299.49,store,2024-02-03 12:00:00

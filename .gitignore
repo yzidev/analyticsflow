@@ -1,5 +1,14 @@
 HELP.md
 target/
+node_modules/
+package-lock.json
+package.json
+.DS_Store
+**/.DS_Store
+data/reports/*
+!data/reports/.gitkeep
+data/files/*
+!data/files/.gitkeep
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

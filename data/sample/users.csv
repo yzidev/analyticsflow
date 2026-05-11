@@ -1,0 +1,4 @@
+user_id,full_name,email,phone,city,country,created_at
+1,Andi Saputra,andi.saputra.1@example.com,+628111111111,Jakarta,Indonesia,2024-01-01 09:00:00
+2,Siti Lestari,siti.lestari.2@example.com,+628122222222,Bandung,Indonesia,2024-01-03 10:15:00
+3,Budi Pratama,budi.pratama.3@example.com,+628133333333,Surabaya,Indonesia,2024-01-05 11:30:00

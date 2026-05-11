@@ -1,0 +1,4 @@
+product_detail_id,product_id,sku,color,size,weight,material,manufacture_date,expiry_date,created_at
+1,1,SKU-0000000001-0000000001,Black,M,0.450,Aluminum,2023-06-01,,2024-01-02 09:05:00
+2,2,SKU-0000000002-0000000002,Blue,L,0.480,Aluminum,2023-07-15,,2024-01-02 09:15:00
+3,3,SKU-0000000003-0000000003,White,S,2.350,Plastic,2023-08-10,2026-08-10,2024-01-02 09:25:00

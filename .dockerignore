@@ -1,0 +1,13 @@
+target/
+.git/
+.idea/
+.vscode/
+.DS_Store
+**/.DS_Store
+data/files/*
+!data/files/.gitkeep
+data/reports/*
+!data/reports/.gitkeep
+node_modules/
+package-lock.json
+package.json

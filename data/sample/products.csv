@@ -1,0 +1,4 @@
+product_id,category_id,product_name,brand,price,is_active,created_at
+1,2,Smart Phone Alpha,Acme Mobile,399.99,True,2024-01-02 09:00:00
+2,2,Smart Phone Beta,Acme Mobile,299.49,True,2024-01-02 09:10:00
+3,3,Air Purifier Mini,HomePlus,149.00,True,2024-01-02 09:20:00

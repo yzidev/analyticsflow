@@ -1,0 +1,4 @@
+transaction_id,order_id,user_id,transaction_date,payment_method,amount,currency,status,created_at
+1,1,1,2024-02-01 10:05:00,credit_card,699.48,USD,success,2024-02-01 10:05:00
+2,2,2,2024-02-02 11:04:00,e_wallet,149.00,USD,success,2024-02-02 11:04:00
+3,3,3,2024-02-03 12:02:00,bank_transfer,299.49,USD,failed,2024-02-03 12:02:00

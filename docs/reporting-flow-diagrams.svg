@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2300" viewBox="0 0 1600 2300">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font: 700 32px Arial, sans-serif; fill: #0f172a; }
+      .section { font: 700 22px Arial, sans-serif; fill: #1e293b; }
+      .box { fill: #f8fafc; stroke: #64748b; stroke-width: 2; rx: 10; }
+      .decision { fill: #fff7ed; stroke: #f97316; stroke-width: 2; }
+      .success { fill: #ecfdf5; stroke: #10b981; stroke-width: 2; rx: 10; }
+      .error { fill: #fef2f2; stroke: #ef4444; stroke-width: 2; rx: 10; }
+      .table { fill: #eff6ff; stroke: #3b82f6; stroke-width: 2; rx: 10; }
+      .text { font: 15px Arial, sans-serif; fill: #0f172a; }
+      .small { font: 13px Arial, sans-serif; fill: #334155; }
+      .line { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .muted { stroke: #94a3b8; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .label { font: 13px Arial, sans-serif; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="2300" fill="#ffffff"/>
+  <text x="60" y="60" class="title">AnalyticsFlow Reporting Flow Diagrams</text>
+
+  <text x="60" y="115" class="section">1. Manual Report Generation</text>
+  <rect x="60" y="145" width="220" height="64" class="box"/>
+  <text x="82" y="173" class="text">POST /api/reports/generate</text>
+  <text x="82" y="194" class="small">GenerateReportRequest</text>
+
+  <rect x="340" y="145" width="210" height="64" class="box"/>
+  <text x="372" y="173" class="text">ReportController</text>
+  <text x="372" y="194" class="small">validate request body</text>
+
+  <polygon points="640,145 755,177 640,209 525,177" class="decision"/>
+  <text x="599" y="174" class="text">date range</text>
+  <text x="610" y="194" class="small">valid?</text>
+
+  <rect x="835" y="145" width="220" height="64" class="box"/>
+  <text x="867" y="173" class="text">Create metadata</text>
+  <text x="870" y="194" class="small">status = GENERATING</text>
+
+  <polygon points="1150,145 1265,177 1150,209 1035,177" class="decision"/>
+  <text x="1118" y="174" class="text">format?</text>
+  <text x="1095" y="194" class="small">CSV or XLSX</text>
+
+  <rect x="1320" y="110" width="220" height="64" class="table"/>
+  <text x="1362" y="138" class="text">CSV generator</text>
+  <text x="1348" y="159" class="small">query analytical table</text>
+
+  <rect x="1320" y="215" width="220" height="64" class="box"/>
+  <text x="1350" y="243" class="text">XLSX placeholder</text>
+  <text x="1346" y="264" class="small">generate workbook bytes</text>
+
+  <rect x="835" y="300" width="220" height="64" class="success"/>
+  <text x="880" y="328" class="text">Write report file</text>
+  <text x="872" y="349" class="small">data/reports/*.csv</text>
+
+  <rect x="560" y="300" width="220" height="64" class="success"/>
+  <text x="590" y="328" class="text">Update metadata</text>
+  <text x="593" y="349" class="small">GENERATED + duration</text>
+
+  <rect x="300" y="300" width="200" height="64" class="success"/>
+  <text x="332" y="328" class="text">Record metrics</text>
+  <text x="325" y="349" class="small">reports.generated</text>
+
+  <rect x="60" y="300" width="180" height="64" class="success"/>
+  <text x="91" y="328" class="text">Return metadata</text>
+  <text x="97" y="349" class="small">downloadUrl</text>
+
+  <rect x="610" y="245" width="220" height="64" class="error"/>
+  <text x="642" y="273" class="text">BadRequestException</text>
+  <text x="653" y="294" class="small">ProblemDetail response</text>
+
+  <line x1="280" y1="177" x2="340" y2="177" class="line"/>
+  <line x1="550" y1="177" x2="525" y2="177" class="line"/>
+  <line x1="755" y1="177" x2="835" y2="177" class="line"/>
+  <text x="772" y="165" class="label">yes</text>
+  <line x1="640" y1="209" x2="690" y2="245" class="line"/>
+  <text x="650" y="235" class="label">no</text>
+  <line x1="1055" y1="177" x2="1035" y2="177" class="line"/>
+  <line x1="1265" y1="162" x2="1320" y2="142" class="line"/>
+  <text x="1280" y="141" class="label">CSV</text>
+  <line x1="1265" y1="194" x2="1320" y2="247" class="line"/>
+  <text x="1280" y="229" class="label">XLSX</text>
+  <path d="M1430,174 L1430,332 L1055,332" class="line"/>
+  <path d="M1320,247 L945,247 L945,300" class="line"/>
+  <line x1="835" y1="332" x2="780" y2="332" class="line"/>
+  <line x1="560" y1="332" x2="500" y2="332" class="line"/>
+  <line x1="300" y1="332" x2="240" y2="332" class="line"/>
+
+  <text x="60" y="450" class="section">2. Initial Reports From Batch</text>
+  <rect x="60" y="480" width="220" height="64" class="box"/>
+  <text x="83" y="508" class="text">Batch final step</text>
+  <text x="82" y="529" class="small">GENERATE_INITIAL_REPORT</text>
+  <rect x="340" y="480" width="220" height="64" class="box"/>
+  <text x="383" y="508" class="text">Tasklet execute</text>
+  <text x="374" y="529" class="small">read jobId parameter</text>
+  <rect x="620" y="480" width="220" height="64" class="box"/>
+  <text x="645" y="508" class="text">Loop ReportType.values</text>
+  <text x="666" y="529" class="small">6 default reports</text>
+  <rect x="900" y="480" width="220" height="64" class="table"/>
+  <text x="940" y="508" class="text">Generate CSV</text>
+  <text x="923" y="529" class="small">query analytical tables</text>
+  <rect x="1180" y="480" width="220" height="64" class="success"/>
+  <text x="1220" y="508" class="text">Persist metadata</text>
+  <text x="1230" y="529" class="small">with jobId</text>
+  <rect x="1180" y="610" width="220" height="64" class="success"/>
+  <text x="1220" y="638" class="text">Update step counts</text>
+  <text x="1215" y="659" class="small">read/write = reports</text>
+  <line x1="280" y1="512" x2="340" y2="512" class="line"/>
+  <line x1="560" y1="512" x2="620" y2="512" class="line"/>
+  <line x1="840" y1="512" x2="900" y2="512" class="line"/>
+  <line x1="1120" y1="512" x2="1180" y2="512" class="line"/>
+  <line x1="1290" y1="544" x2="1290" y2="610" class="line"/>
+
+  <text x="60" y="760" class="section">3. List, Detail, And Download</text>
+  <rect x="60" y="790" width="210" height="64" class="box"/>
+  <text x="85" y="818" class="text">GET /api/reports</text>
+  <text x="99" y="839" class="small">list metadata</text>
+  <rect x="60" y="890" width="210" height="64" class="box"/>
+  <text x="78" y="918" class="text">GET /api/reports/{id}</text>
+  <text x="95" y="939" class="small">detail metadata</text>
+  <rect x="60" y="990" width="210" height="64" class="box"/>
+  <text x="68" y="1018" class="text">GET /api/reports/{id}/download</text>
+  <text x="103" y="1039" class="small">download file</text>
+
+  <rect x="360" y="840" width="230" height="64" class="table"/>
+  <text x="396" y="868" class="text">report_metadata</text>
+  <text x="401" y="889" class="small">find, sort, map DTO</text>
+  <polygon points="730,940 850,980 730,1020 610,980" class="decision"/>
+  <text x="682" y="978" class="text">file exists?</text>
+  <rect x="940" y="920" width="230" height="64" class="success"/>
+  <text x="973" y="948" class="text">FileSystemResource</text>
+  <text x="981" y="969" class="small">safe reports path</text>
+  <rect x="1250" y="920" width="230" height="64" class="success"/>
+  <text x="1287" y="948" class="text">Attachment response</text>
+  <text x="1302" y="969" class="small">CSV or XLSX content type</text>
+  <rect x="940" y="1030" width="230" height="64" class="error"/>
+  <text x="971" y="1058" class="text">ResourceNotFound</text>
+  <text x="987" y="1079" class="small">ProblemDetail</text>
+  <line x1="270" y1="822" x2="360" y2="860" class="line"/>
+  <line x1="270" y1="922" x2="360" y2="875" class="line"/>
+  <line x1="270" y1="1022" x2="610" y2="980" class="line"/>
+  <line x1="590" y1="872" x2="1250" y2="952" class="muted"/>
+  <line x1="850" y1="980" x2="940" y2="952" class="line"/>
+  <text x="870" y="951" class="label">yes</text>
+  <line x1="730" y1="1020" x2="940" y2="1062" class="line"/>
+  <text x="770" y="1045" class="label">no</text>
+  <line x1="1170" y1="952" x2="1250" y2="952" class="line"/>
+
+  <text x="60" y="1200" class="section">4. Report Type Query Flows</text>
+
+  <rect x="60" y="1230" width="240" height="74" class="box"/>
+  <text x="85" y="1258" class="text">SALES_DAILY_SUMMARY</text>
+  <text x="88" y="1279" class="small">date filter supported</text>
+  <rect x="360" y="1230" width="260" height="74" class="table"/>
+  <text x="405" y="1258" class="text">sales_daily_summary</text>
+  <text x="385" y="1279" class="small">orders, revenue, transactions, delivery totals</text>
+  <line x1="300" y1="1267" x2="360" y2="1267" class="line"/>
+
+  <rect x="60" y="1340" width="240" height="74" class="box"/>
+  <text x="82" y="1368" class="text">SALES_PRODUCT_SUMMARY</text>
+  <text x="88" y="1389" class="small">rank by total revenue</text>
+  <rect x="360" y="1340" width="260" height="74" class="table"/>
+  <text x="400" y="1368" class="text">sales_product_summary</text>
+  <text x="390" y="1389" class="small">product, category, brand, quantity, revenue</text>
+  <line x1="300" y1="1377" x2="360" y2="1377" class="line"/>
+
+  <rect x="60" y="1450" width="240" height="74" class="box"/>
+  <text x="76" y="1478" class="text">SALES_CUSTOMER_SUMMARY</text>
+  <text x="88" y="1499" class="small">rank by total spent</text>
+  <rect x="360" y="1450" width="260" height="74" class="table"/>
+  <text x="394" y="1478" class="text">sales_customer_summary</text>
+  <text x="392" y="1499" class="small">customer identity, orders, items, spent</text>
+  <line x1="300" y1="1487" x2="360" y2="1487" class="line"/>
+
+  <rect x="780" y="1230" width="300" height="74" class="box"/>
+  <text x="805" y="1258" class="text">DELIVERY_PERFORMANCE_SUMMARY</text>
+  <text x="840" y="1279" class="small">date filter supported</text>
+  <rect x="1140" y="1230" width="300" height="74" class="table"/>
+  <text x="1188" y="1258" class="text">delivery_performance_summary</text>
+  <text x="1173" y="1279" class="small">courier, status counts, average duration</text>
+  <line x1="1080" y1="1267" x2="1140" y2="1267" class="line"/>
+
+  <rect x="780" y="1340" width="300" height="74" class="box"/>
+  <text x="817" y="1368" class="text">PAYMENT_METHOD_SUMMARY</text>
+  <text x="840" y="1389" class="small">date filter supported</text>
+  <rect x="1140" y="1340" width="300" height="74" class="table"/>
+  <text x="1190" y="1368" class="text">payment_method_summary</text>
+  <text x="1178" y="1389" class="small">method, currency, counts, total amount</text>
+  <line x1="1080" y1="1377" x2="1140" y2="1377" class="line"/>
+
+  <rect x="780" y="1450" width="300" height="74" class="box"/>
+  <text x="824" y="1478" class="text">CHANNEL_SALES_SUMMARY</text>
+  <text x="840" y="1499" class="small">date filter supported</text>
+  <rect x="1140" y="1450" width="300" height="74" class="table"/>
+  <text x="1195" y="1478" class="text">channel_sales_summary</text>
+  <text x="1190" y="1499" class="small">channel, orders, items, revenue</text>
+  <line x1="1080" y1="1487" x2="1140" y2="1487" class="line"/>
+
+  <rect x="600" y="1610" width="370" height="74" class="success"/>
+  <text x="665" y="1638" class="text">Convert query rows into CSV string</text>
+  <text x="695" y="1659" class="small">headers + escaped values + line separator</text>
+  <path d="M490,1304 L490,1647 L600,1647" class="muted"/>
+  <path d="M490,1414 L490,1647" class="muted"/>
+  <path d="M490,1524 L490,1647" class="muted"/>
+  <path d="M1290,1304 L1290,1647 L970,1647" class="muted"/>
+  <path d="M1290,1414 L1290,1647" class="muted"/>
+  <path d="M1290,1524 L1290,1647" class="muted"/>
+
+  <text x="60" y="1780" class="section">5. Failure Flow</text>
+  <rect x="60" y="1810" width="220" height="64" class="box"/>
+  <text x="93" y="1838" class="text">Generate report</text>
+  <text x="92" y="1859" class="small">manual or batch</text>
+  <polygon points="420,1810 540,1842 420,1874 300,1842" class="decision"/>
+  <text x="363" y="1839" class="text">failure type?</text>
+  <rect x="620" y="1770" width="260" height="64" class="error"/>
+  <text x="668" y="1798" class="text">Invalid date range</text>
+  <text x="655" y="1819" class="small">BadRequest before metadata</text>
+  <rect x="620" y="1875" width="260" height="64" class="error"/>
+  <text x="675" y="1903" class="text">SQL or file error</text>
+  <text x="656" y="1924" class="small">metadata status FAILED</text>
+  <rect x="960" y="1875" width="260" height="64" class="error"/>
+  <text x="996" y="1903" class="text">Persist failed metadata</text>
+  <text x="1002" y="1924" class="small">duration + updatedAt</text>
+  <rect x="1300" y="1875" width="220" height="64" class="error"/>
+  <text x="1327" y="1903" class="text">ProblemDetail</text>
+  <text x="1335" y="1924" class="small">HTTP error response</text>
+  <line x1="280" y1="1842" x2="300" y2="1842" class="line"/>
+  <line x1="540" y1="1825" x2="620" y2="1802" class="line"/>
+  <line x1="540" y1="1858" x2="620" y2="1907" class="line"/>
+  <line x1="880" y1="1907" x2="960" y2="1907" class="line"/>
+  <line x1="1220" y1="1907" x2="1300" y2="1907" class="line"/>
+  <path d="M750,1770 L750,1715 L1410,1715 L1410,1875" class="line"/>
+</svg>

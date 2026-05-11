@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: analyticsflow-postgres
+    environment:
+      POSTGRES_DB: analyticsflow
+      POSTGRES_USER: analyticsflow
+      POSTGRES_PASSWORD: analyticsflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - analyticsflow-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analyticsflow -d analyticsflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: analyticsflow-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analyticsflow
+      SPRING_DATASOURCE_USERNAME: analyticsflow
+      SPRING_DATASOURCE_PASSWORD: analyticsflow
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/analyticsflow
+      SPRING_R2DBC_USERNAME: analyticsflow
+      SPRING_R2DBC_PASSWORD: analyticsflow
+      ANALYTICSFLOW_DB_BLOCKING_URL: jdbc:postgresql://postgres:5432/analyticsflow
+      ANALYTICSFLOW_DB_BLOCKING_USERNAME: analyticsflow
+      ANALYTICSFLOW_DB_BLOCKING_PASSWORD: analyticsflow
+      ANALYTICSFLOW_DB_REACTIVE_URL: r2dbc:postgresql://postgres:5432/analyticsflow
+      ANALYTICSFLOW_DB_REACTIVE_USERNAME: analyticsflow
+      ANALYTICSFLOW_DB_REACTIVE_PASSWORD: analyticsflow
+      ANALYTICSFLOW_DATA_SOURCE_DIRECTORY: /app/data/files
+      ANALYTICSFLOW_DATA_SAMPLE_DIRECTORY: /app/data/sample
+      ANALYTICSFLOW_DATA_REPORTS_DIRECTORY: /app/data/reports
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+
+volumes:
+  analyticsflow-postgres:

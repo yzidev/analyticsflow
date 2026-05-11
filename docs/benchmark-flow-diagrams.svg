@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1800" viewBox="0 0 1600 1800">
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#334155"/>
+    </marker>
+    <style>
+      .title { font: 700 32px Arial, sans-serif; fill: #0f172a; }
+      .section { font: 700 22px Arial, sans-serif; fill: #1e293b; }
+      .box { fill: #f8fafc; stroke: #64748b; stroke-width: 2; rx: 10; }
+      .decision { fill: #fff7ed; stroke: #f97316; stroke-width: 2; }
+      .success { fill: #ecfdf5; stroke: #10b981; stroke-width: 2; rx: 10; }
+      .table { fill: #eff6ff; stroke: #3b82f6; stroke-width: 2; rx: 10; }
+      .error { fill: #fef2f2; stroke: #ef4444; stroke-width: 2; rx: 10; }
+      .text { font: 15px Arial, sans-serif; fill: #0f172a; }
+      .small { font: 13px Arial, sans-serif; fill: #334155; }
+      .line { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .muted { stroke: #94a3b8; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="1800" fill="#ffffff"/>
+  <text x="60" y="60" class="title">AnalyticsFlow Benchmark Method Flow Diagrams</text>
+
+  <text x="60" y="120" class="section">1. Shared Controller Flow</text>
+  <rect x="60" y="150" width="220" height="64" class="box"/>
+  <text x="92" y="178" class="text">Client or k6 script</text>
+  <text x="86" y="199" class="small">GET benchmark endpoint</text>
+  <rect x="350" y="150" width="250" height="64" class="box"/>
+  <text x="385" y="178" class="text">BenchmarkReportController</text>
+  <text x="405" y="199" class="small">route by URL path</text>
+  <polygon points="755,145 875,182 755,219 635,182" class="decision"/>
+  <text x="715" y="180" class="text">strategy?</text>
+  <rect x="960" y="70" width="220" height="54" class="box"/>
+  <text x="1013" y="103" class="text">Blocking</text>
+  <rect x="960" y="145" width="220" height="54" class="box"/>
+  <text x="1000" y="178" class="text">Virtual Thread</text>
+  <rect x="960" y="220" width="220" height="54" class="box"/>
+  <text x="995" y="253" class="text">CompletableFuture</text>
+  <rect x="960" y="295" width="220" height="54" class="box"/>
+  <text x="1014" y="328" class="text">Reactive</text>
+  <rect x="1270" y="180" width="240" height="64" class="success"/>
+  <text x="1310" y="208" class="text">ReportBenchmarkResponse</text>
+  <text x="1308" y="229" class="small">same response shape</text>
+  <line x1="280" y1="182" x2="350" y2="182" class="line"/>
+  <line x1="600" y1="182" x2="635" y2="182" class="line"/>
+  <path d="M875,182 L910,182 L910,97 L960,97" class="line"/>
+  <line x1="875" y1="182" x2="960" y2="172" class="line"/>
+  <path d="M875,182 L910,182 L910,247 L960,247" class="line"/>
+  <path d="M875,182 L910,182 L910,322 L960,322" class="line"/>
+  <path d="M1180,97 L1230,97 L1230,212 L1270,212" class="muted"/>
+  <line x1="1180" y1="172" x2="1270" y2="212" class="muted"/>
+  <line x1="1180" y1="247" x2="1270" y2="212" class="muted"/>
+  <path d="M1180,322 L1230,322 L1230,212 L1270,212" class="muted"/>
+
+  <text x="60" y="450" class="section">2. Blocking Method</text>
+  <rect x="60" y="480" width="220" height="64" class="box"/>
+  <text x="88" y="508" class="text">BlockingReportService</text>
+  <text x="102" y="529" class="small">request thread</text>
+  <rect x="350" y="480" width="220" height="64" class="table"/>
+  <text x="396" y="508" class="text">Query 1</text>
+  <text x="388" y="529" class="small">sales daily</text>
+  <rect x="620" y="480" width="220" height="64" class="table"/>
+  <text x="666" y="508" class="text">Query 2-5</text>
+  <text x="646" y="529" class="small">product, customer, etc</text>
+  <rect x="890" y="480" width="220" height="64" class="table"/>
+  <text x="936" y="508" class="text">Query 6</text>
+  <text x="925" y="529" class="small">channel summary</text>
+  <rect x="1160" y="480" width="220" height="64" class="success"/>
+  <text x="1208" y="508" class="text">Merge slices</text>
+  <text x="1192" y="529" class="small">strategy BLOCKING</text>
+  <line x1="280" y1="512" x2="350" y2="512" class="line"/>
+  <line x1="570" y1="512" x2="620" y2="512" class="line"/>
+  <line x1="840" y1="512" x2="890" y2="512" class="line"/>
+  <line x1="1110" y1="512" x2="1160" y2="512" class="line"/>
+
+  <text x="60" y="650" class="section">3. Virtual Thread Method</text>
+  <rect x="60" y="680" width="220" height="64" class="box"/>
+  <text x="80" y="708" class="text">VirtualThreadService</text>
+  <text x="84" y="729" class="small">create 6 Callables</text>
+  <rect x="350" y="680" width="260" height="64" class="box"/>
+  <text x="382" y="708" class="text">invokeAll on executor</text>
+  <text x="377" y="729" class="small">newVirtualThreadPerTaskExecutor</text>
+  <rect x="690" y="615" width="240" height="54" class="table"/>
+  <text x="728" y="648" class="text">virtual query task 1</text>
+  <rect x="690" y="690" width="240" height="54" class="table"/>
+  <text x="728" y="723" class="text">virtual query task 2-5</text>
+  <rect x="690" y="765" width="240" height="54" class="table"/>
+  <text x="728" y="798" class="text">virtual query task 6</text>
+  <rect x="1020" y="690" width="240" height="64" class="success"/>
+  <text x="1068" y="718" class="text">Future.get results</text>
+  <text x="1050" y="739" class="small">thread contains virtual=true</text>
+  <rect x="1340" y="690" width="200" height="64" class="success"/>
+  <text x="1370" y="718" class="text">Merge + response</text>
+  <text x="1374" y="739" class="small">VIRTUAL_THREAD</text>
+  <line x1="280" y1="712" x2="350" y2="712" class="line"/>
+  <path d="M610,712 L650,712 L650,642 L690,642" class="line"/>
+  <line x1="610" y1="712" x2="690" y2="717" class="line"/>
+  <path d="M610,712 L650,712 L650,792 L690,792" class="line"/>
+  <path d="M930,642 L970,642 L970,722 L1020,722" class="muted"/>
+  <line x1="930" y1="717" x2="1020" y2="722" class="muted"/>
+  <path d="M930,792 L970,792 L970,722 L1020,722" class="muted"/>
+  <line x1="1260" y1="722" x2="1340" y2="722" class="line"/>
+
+  <text x="60" y="950" class="section">4. CompletableFuture Method</text>
+  <rect x="60" y="980" width="240" height="64" class="box"/>
+  <text x="78" y="1008" class="text">CompletableFutureService</text>
+  <text x="96" y="1029" class="small">create 6 futures</text>
+  <rect x="370" y="980" width="240" height="64" class="box"/>
+  <text x="415" y="1008" class="text">supplyAsync</text>
+  <text x="398" y="1029" class="small">analyticsflow-cf executor</text>
+  <rect x="700" y="915" width="230" height="54" class="table"/>
+  <text x="744" y="948" class="text">future query 1</text>
+  <rect x="700" y="990" width="230" height="54" class="table"/>
+  <text x="744" y="1023" class="text">future query 2-5</text>
+  <rect x="700" y="1065" width="230" height="54" class="table"/>
+  <text x="744" y="1098" class="text">future query 6</text>
+  <polygon points="1120,970 1240,1012 1120,1054 1000,1012" class="decision"/>
+  <text x="1070" y="1008" class="text">allOf done</text>
+  <text x="1077" y="1029" class="small">under 30s?</text>
+  <rect x="1320" y="940" width="220" height="64" class="success"/>
+  <text x="1370" y="968" class="text">Join futures</text>
+  <text x="1355" y="989" class="small">merge + response</text>
+  <rect x="1320" y="1055" width="220" height="64" class="error"/>
+  <text x="1360" y="1083" class="text">Cancel pending</text>
+  <text x="1355" y="1104" class="small">throw benchmark error</text>
+  <line x1="300" y1="1012" x2="370" y2="1012" class="line"/>
+  <path d="M610,1012 L660,1012 L660,942 L700,942" class="line"/>
+  <line x1="610" y1="1012" x2="700" y2="1017" class="line"/>
+  <path d="M610,1012 L660,1012 L660,1092 L700,1092" class="line"/>
+  <path d="M930,942 L970,942 L970,1012 L1000,1012" class="muted"/>
+  <line x1="930" y1="1017" x2="1000" y2="1012" class="muted"/>
+  <path d="M930,1092 L970,1092 L970,1012 L1000,1012" class="muted"/>
+  <line x1="1240" y1="1000" x2="1320" y2="972" class="line"/>
+  <line x1="1240" y1="1027" x2="1320" y2="1087" class="line"/>
+
+  <text x="60" y="1260" class="section">5. Reactive WebFlux Method</text>
+  <rect x="60" y="1290" width="230" height="64" class="box"/>
+  <text x="96" y="1318" class="text">ReactiveService</text>
+  <text x="87" y="1339" class="small">returns Mono response</text>
+  <rect x="360" y="1290" width="230" height="64" class="box"/>
+  <text x="413" y="1318" class="text">Create 6 Monos</text>
+  <text x="402" y="1339" class="small">R2DBC DatabaseClient</text>
+  <rect x="680" y="1225" width="230" height="54" class="table"/>
+  <text x="735" y="1258" class="text">Mono query 1</text>
+  <rect x="680" y="1300" width="230" height="54" class="table"/>
+  <text x="735" y="1333" class="text">Mono query 2-5</text>
+  <rect x="680" y="1375" width="230" height="54" class="table"/>
+  <text x="735" y="1408" class="text">Mono query 6</text>
+  <polygon points="1110,1280 1230,1322 1110,1364 990,1322" class="decision"/>
+  <text x="1074" y="1318" class="text">Mono.zip</text>
+  <text x="1063" y="1339" class="small">under 30s?</text>
+  <rect x="1310" y="1250" width="230" height="64" class="success"/>
+  <text x="1352" y="1278" class="text">Collect tuple</text>
+  <text x="1346" y="1299" class="small">merge + REACTIVE</text>
+  <rect x="1310" y="1365" width="230" height="64" class="error"/>
+  <text x="1344" y="1393" class="text">Map reactive error</text>
+  <text x="1358" y="1414" class="small">timeout or failure</text>
+  <line x1="290" y1="1322" x2="360" y2="1322" class="line"/>
+  <path d="M590,1322 L640,1322 L640,1252 L680,1252" class="line"/>
+  <line x1="590" y1="1322" x2="680" y2="1327" class="line"/>
+  <path d="M590,1322 L640,1322 L640,1402 L680,1402" class="line"/>
+  <path d="M910,1252 L950,1252 L950,1322 L990,1322" class="muted"/>
+  <line x1="910" y1="1327" x2="990" y2="1322" class="muted"/>
+  <path d="M910,1402 L950,1402 L950,1322 L990,1322" class="muted"/>
+  <line x1="1230" y1="1310" x2="1310" y2="1282" class="line"/>
+  <line x1="1230" y1="1337" x2="1310" y2="1397" class="line"/>
+
+  <text x="60" y="1570" class="section">6. k6 Script Flow</text>
+  <rect x="60" y="1600" width="220" height="64" class="box"/>
+  <text x="92" y="1628" class="text">k6 run script</text>
+  <text x="76" y="1649" class="small">blocking, VT, CF, reactive</text>
+  <rect x="350" y="1600" width="220" height="64" class="box"/>
+  <text x="391" y="1628" class="text">Read env config</text>
+  <text x="390" y="1649" class="small">BASE_URL, VUS, duration</text>
+  <rect x="640" y="1600" width="220" height="64" class="box"/>
+  <text x="688" y="1628" class="text">HTTP GET</text>
+  <text x="672" y="1649" class="small">benchmark endpoint</text>
+  <rect x="930" y="1600" width="220" height="64" class="success"/>
+  <text x="967" y="1628" class="text">Check response</text>
+  <text x="960" y="1649" class="small">status, strategy, timing</text>
+  <rect x="1220" y="1600" width="260" height="64" class="success"/>
+  <text x="1260" y="1628" class="text">Record k6 metrics</text>
+  <text x="1252" y="1649" class="small">success rate + processingTimeMs</text>
+  <line x1="280" y1="1632" x2="350" y2="1632" class="line"/>
+  <line x1="570" y1="1632" x2="640" y2="1632" class="line"/>
+  <line x1="860" y1="1632" x2="930" y2="1632" class="line"/>
+  <line x1="1150" y1="1632" x2="1220" y2="1632" class="line"/>
+</svg>

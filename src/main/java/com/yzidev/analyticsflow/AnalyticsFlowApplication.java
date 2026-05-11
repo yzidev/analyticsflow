@@ -2,12 +2,13 @@ package com.yzidev.analyticsflow;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
-public class AnalyticsflowApplication {
+@ConfigurationPropertiesScan
+public class AnalyticsFlowApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AnalyticsflowApplication.class, args);
+		SpringApplication.run(AnalyticsFlowApplication.class, args);
 	}
-
 }

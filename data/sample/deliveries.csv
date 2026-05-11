@@ -1,0 +1,4 @@
+delivery_id,order_id,delivery_status,delivery_address,shipped_date,delivered_date,courier_name,created_at
+1,1,delivered,Street 10 Jakarta,2024-02-02 14:00:00,2024-02-04 18:00:00,DHL,2024-02-02 14:00:00
+2,2,in_transit,Street 22 Bandung,2024-02-03 15:30:00,,FedEx,2024-02-03 15:30:00
+3,3,cancelled,Street 35 Surabaya,2024-02-04 16:00:00,,UPS,2024-02-04 16:00:00

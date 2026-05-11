@@ -1,0 +1,4 @@
+category_id,category_name,parent_category_id,description,created_at
+1,Electronics,,Electronic devices and accessories,2024-01-01 08:00:00
+2,Mobile Phones,1,Smartphones and feature phones,2024-01-01 08:10:00
+3,Home Appliances,,Household electrical products,2024-01-01 08:20:00
