@@ -18,6 +18,7 @@ export function createOptions(strategy) {
   return {
     vus: numberEnv('VUS', DEFAULT_VUS),
     duration: __ENV.DURATION || DEFAULT_DURATION,
+    summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
     thresholds: {
       http_req_failed: [errorRateThreshold],
       http_req_duration: [p95Threshold, p99Threshold],

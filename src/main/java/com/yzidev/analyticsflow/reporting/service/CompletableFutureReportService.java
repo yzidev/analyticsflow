@@ -19,7 +19,7 @@ import com.yzidev.analyticsflow.repository.blocking.BlockingAnalyticsReportRepos
 @Service
 public class CompletableFutureReportService {
 
-	private static final long QUERY_TIMEOUT_SECONDS = 30;
+	private static final long QUERY_TIMEOUT_SECONDS = 60;
 
 	private final BlockingAnalyticsReportRepository repository;
 	private final ReportAggregationSupport aggregationSupport;

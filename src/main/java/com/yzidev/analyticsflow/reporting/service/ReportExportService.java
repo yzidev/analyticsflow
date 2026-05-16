@@ -1,7 +1,6 @@
 package com.yzidev.analyticsflow.reporting.service;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -73,9 +72,7 @@ public class ReportExportService {
 			reportMetadataRepository.save(metadata);
 			Files.createDirectories(reportPath.getParent());
 			if (request.format() == ReportFormat.CSV) {
-				Files.writeString(reportPath,
-						csvReportGenerator.generate(request.reportType(), request.startDate(), request.endDate()),
-						StandardCharsets.UTF_8);
+				csvReportGenerator.generate(reportPath, request.reportType(), request.startDate(), request.endDate());
 			}
 			else {
 				Files.write(reportPath, xlsxReportGenerator.generatePlaceholder(request.reportType()));

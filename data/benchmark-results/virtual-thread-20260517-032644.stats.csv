@@ -1,0 +1,19 @@
+timestamp,container,cpu_percent,mem_percent,mem_usage
+2026-05-16T20:26:44Z,analyticsflow-app,0.89%,8.04%,630.1MiB / 7.653GiB
+2026-05-16T20:26:44Z,analyticsflow-postgres,1013.73%,30.82%,2.359GiB / 7.653GiB
+2026-05-16T20:26:48Z,analyticsflow-app,2.07%,8.04%,630.4MiB / 7.653GiB
+2026-05-16T20:26:48Z,analyticsflow-postgres,1004.06%,30.82%,2.359GiB / 7.653GiB
+2026-05-16T20:26:52Z,analyticsflow-app,8.93%,8.04%,630.4MiB / 7.653GiB
+2026-05-16T20:26:52Z,analyticsflow-postgres,1004.22%,30.83%,2.359GiB / 7.653GiB
+2026-05-16T20:26:56Z,analyticsflow-app,5.25%,8.04%,630.1MiB / 7.653GiB
+2026-05-16T20:26:56Z,analyticsflow-postgres,290.11%,30.82%,2.359GiB / 7.653GiB
+2026-05-16T20:27:00Z,analyticsflow-app,4.90%,8.04%,630.1MiB / 7.653GiB
+2026-05-16T20:27:00Z,analyticsflow-postgres,617.76%,30.81%,2.358GiB / 7.653GiB
+2026-05-16T20:27:04Z,analyticsflow-app,4.62%,8.04%,630.2MiB / 7.653GiB
+2026-05-16T20:27:04Z,analyticsflow-postgres,512.17%,30.82%,2.359GiB / 7.653GiB
+2026-05-16T20:27:08Z,analyticsflow-app,7.21%,8.04%,630.2MiB / 7.653GiB
+2026-05-16T20:27:08Z,analyticsflow-postgres,945.15%,30.83%,2.36GiB / 7.653GiB
+2026-05-16T20:27:12Z,analyticsflow-app,7.80%,8.04%,630.4MiB / 7.653GiB
+2026-05-16T20:27:12Z,analyticsflow-postgres,561.19%,30.80%,2.357GiB / 7.653GiB
+2026-05-16T20:27:16Z,analyticsflow-app,6.96%,8.04%,630.4MiB / 7.653GiB
+2026-05-16T20:27:16Z,analyticsflow-postgres,531.44%,30.80%,2.357GiB / 7.653GiB

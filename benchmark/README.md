@@ -40,3 +40,46 @@ docker stats
 ```
 
 Run one strategy at a time against the same loaded analytical dataset, then compare request rate, average latency, p95, p99, error rate, CPU, memory, thread count, and GC activity.
+
+## Saving Results
+
+Use the Makefile targets to save k6 summary JSON files under `data/benchmark-results`:
+
+```bash
+make benchmark-save BENCHMARK=blocking
+make benchmark-all-save
+```
+
+`benchmark-all-save` continues running the remaining strategies even when one strategy crosses a threshold, so every strategy still gets a result file.
+
+To also sample Docker CPU and memory usage while each benchmark runs:
+
+```bash
+make benchmark-all-save-stats
+```
+
+For a more stable comparison, run the full suite several times and aggregate the latest N results per strategy:
+
+```bash
+make benchmark-repeat-save-stats BENCHMARK_RUNS=3
+make benchmark-repeat-save-stats BENCHMARK_RUNS=5
+```
+
+This writes paired files like:
+
+- `data/benchmark-results/blocking-20260517-031015.json`
+- `data/benchmark-results/blocking-20260517-031015.stats.csv`
+
+Print the latest comparison table:
+
+```bash
+make benchmark-compare
+make benchmark-compare BENCHMARK_COMPARE_RUNS=3
+```
+
+Compare these fields in each JSON summary:
+
+- `metrics.http_req_duration.avg`, `p(95)`, and `p(99)` for end-to-end latency.
+- `metrics.app_processing_time_ms.avg`, `p(95)`, and `p(99)` for server-side processing time reported by the app.
+- `metrics.http_reqs.rate` for throughput.
+- `metrics.http_req_failed.value` and `metrics.benchmark_success.value` for correctness and reliability.

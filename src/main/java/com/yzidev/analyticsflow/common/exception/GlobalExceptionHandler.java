@@ -3,6 +3,8 @@ package com.yzidev.analyticsflow.common.exception;
 import java.time.Instant;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
 	@ExceptionHandler(BadRequestException.class)
 	ProblemDetail handleBadRequest(BadRequestException exception) {
@@ -33,6 +37,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	ProblemDetail handleUnexpected(Exception exception) {
+		LOGGER.error("Unhandled request exception", exception);
 		return problem(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
 	}
 

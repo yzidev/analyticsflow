@@ -1,11 +1,19 @@
 package com.yzidev.analyticsflow.reporting.generator;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.stereotype.Component;
 
 import com.yzidev.analyticsflow.common.enums.ReportType;
@@ -19,23 +27,30 @@ public class CsvReportGenerator {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	public String generate(ReportType reportType, LocalDate startDate, LocalDate endDate) {
-		return switch (reportType) {
-			case SALES_DAILY_SUMMARY -> generateSalesDailySummary(startDate, endDate);
-			case SALES_PRODUCT_SUMMARY -> generateSalesProductSummary();
-			case SALES_CUSTOMER_SUMMARY -> generateSalesCustomerSummary();
-			case DELIVERY_PERFORMANCE_SUMMARY -> generateDeliveryPerformanceSummary(startDate, endDate);
-			case PAYMENT_METHOD_SUMMARY -> generatePaymentMethodSummary(startDate, endDate);
-			case CHANNEL_SALES_SUMMARY -> generateChannelSalesSummary(startDate, endDate);
-		};
+	public void generate(Path reportPath, ReportType reportType, LocalDate startDate, LocalDate endDate)
+			throws IOException {
+		try (BufferedWriter writer = Files.newBufferedWriter(reportPath, StandardCharsets.UTF_8)) {
+			switch (reportType) {
+				case SALES_DAILY_SUMMARY -> generateSalesDailySummary(writer, startDate, endDate);
+				case SALES_PRODUCT_SUMMARY -> generateSalesProductSummary(writer);
+				case SALES_CUSTOMER_SUMMARY -> generateSalesCustomerSummary(writer);
+				case DELIVERY_PERFORMANCE_SUMMARY -> generateDeliveryPerformanceSummary(writer, startDate, endDate);
+				case PAYMENT_METHOD_SUMMARY -> generatePaymentMethodSummary(writer, startDate, endDate);
+				case CHANNEL_SALES_SUMMARY -> generateChannelSalesSummary(writer, startDate, endDate);
+			}
+		}
+		catch (UncheckedIOException exception) {
+			throw exception.getCause();
+		}
 	}
 
-	private String generateSalesDailySummary(LocalDate startDate, LocalDate endDate) {
-		return csv(
+	private void generateSalesDailySummary(BufferedWriter writer, LocalDate startDate, LocalDate endDate) {
+		csv(
+				writer,
 				List.of("summary_date", "total_orders", "total_items_sold", "total_gross_revenue",
 						"total_paid_revenue", "total_success_transactions", "total_failed_transactions",
 						"total_shipped_orders", "total_delivered_orders"),
-				jdbcTemplate.queryForList("""
+				"""
 						select summary_date, total_orders, total_items_sold, total_gross_revenue,
 						       total_paid_revenue, total_success_transactions, total_failed_transactions,
 						       total_shipped_orders, total_delivered_orders
@@ -43,39 +58,43 @@ public class CsvReportGenerator {
 						where (?::date is null or summary_date >= ?::date)
 						  and (?::date is null or summary_date <= ?::date)
 						order by summary_date
-						""", startDate, startDate, endDate, endDate));
+						""",
+				startDate, startDate, endDate, endDate);
 	}
 
-	private String generateSalesProductSummary() {
-		return csv(
+	private void generateSalesProductSummary(BufferedWriter writer) {
+		csv(
+				writer,
 				List.of("product_id", "product_name", "category_id", "category_name", "brand",
 						"total_orders", "total_quantity_sold", "total_revenue"),
-				jdbcTemplate.queryForList("""
+				"""
 						select product_id, product_name, category_id, category_name, brand,
 						       total_orders, total_quantity_sold, total_revenue
 						from analyticsflow_olap.sales_product_summary
 						order by total_revenue desc, product_id
-						"""));
+						""");
 	}
 
-	private String generateSalesCustomerSummary() {
-		return csv(
+	private void generateSalesCustomerSummary(BufferedWriter writer) {
+		csv(
+				writer,
 				List.of("user_id", "full_name", "email", "city", "country", "total_orders",
 						"total_items_purchased", "total_spent", "last_order_date"),
-				jdbcTemplate.queryForList("""
+				"""
 						select user_id, full_name, email, city, country, total_orders,
 						       total_items_purchased, total_spent, last_order_date
 						from analyticsflow_olap.sales_customer_summary
 						order by total_spent desc, user_id
-						"""));
+						""");
 	}
 
-	private String generateDeliveryPerformanceSummary(LocalDate startDate, LocalDate endDate) {
-		return csv(
+	private void generateDeliveryPerformanceSummary(BufferedWriter writer, LocalDate startDate, LocalDate endDate) {
+		csv(
+				writer,
 				List.of("summary_date", "courier_name", "total_shipments", "total_pending", "total_shipped",
 						"total_in_transit", "total_delivered", "total_failed", "total_returned",
 						"average_delivery_duration_hours"),
-				jdbcTemplate.queryForList("""
+				"""
 						select summary_date, courier_name, total_shipments, total_pending, total_shipped,
 						       total_in_transit, total_delivered, total_failed, total_returned,
 						       average_delivery_duration_hours
@@ -83,47 +102,83 @@ public class CsvReportGenerator {
 						where (?::date is null or summary_date >= ?::date)
 						  and (?::date is null or summary_date <= ?::date)
 						order by summary_date, courier_name
-						""", startDate, startDate, endDate, endDate));
+						""",
+				startDate, startDate, endDate, endDate);
 	}
 
-	private String generatePaymentMethodSummary(LocalDate startDate, LocalDate endDate) {
-		return csv(
+	private void generatePaymentMethodSummary(BufferedWriter writer, LocalDate startDate, LocalDate endDate) {
+		csv(
+				writer,
 				List.of("summary_date", "payment_method", "currency", "total_transactions",
 						"total_success", "total_failed", "total_pending", "total_amount"),
-				jdbcTemplate.queryForList("""
+				"""
 						select summary_date, payment_method, currency, total_transactions,
 						       total_success, total_failed, total_pending, total_amount
 						from analyticsflow_olap.payment_method_summary
 						where (?::date is null or summary_date >= ?::date)
 						  and (?::date is null or summary_date <= ?::date)
 						order by summary_date, payment_method, currency
-						""", startDate, startDate, endDate, endDate));
+						""",
+				startDate, startDate, endDate, endDate);
 	}
 
-	private String generateChannelSalesSummary(LocalDate startDate, LocalDate endDate) {
-		return csv(
+	private void generateChannelSalesSummary(BufferedWriter writer, LocalDate startDate, LocalDate endDate) {
+		csv(
+				writer,
 				List.of("summary_date", "channel", "total_orders", "total_items_sold",
 						"total_revenue", "total_success_transactions"),
-				jdbcTemplate.queryForList("""
+				"""
 						select summary_date, channel, total_orders, total_items_sold,
 						       total_revenue, total_success_transactions
 						from analyticsflow_olap.channel_sales_summary
 						where (?::date is null or summary_date >= ?::date)
 						  and (?::date is null or summary_date <= ?::date)
 						order by summary_date, channel
-						""", startDate, startDate, endDate, endDate));
+						""",
+				startDate, startDate, endDate, endDate);
 	}
 
-	private String csv(List<String> headers, List<Map<String, Object>> rows) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(String.join(",", headers)).append(System.lineSeparator());
-		for (Map<String, Object> row : rows) {
-			builder.append(headers.stream()
-					.map(header -> escape(row.get(header)))
-					.collect(Collectors.joining(",")))
-					.append(System.lineSeparator());
+	private void csv(BufferedWriter writer, List<String> headers, String sql, Object... params) {
+		writeLine(writer, String.join(",", headers));
+		jdbcTemplate.query(streamingStatement(sql, params), resultSet -> {
+			while (resultSet.next()) {
+				writeLine(writer, headers.stream()
+						.map(header -> resultSetValue(resultSet, header))
+						.map(this::escape)
+						.collect(Collectors.joining(",")));
+			}
+			return null;
+		});
+	}
+
+	private PreparedStatementCreator streamingStatement(String sql, Object... params) {
+		return connection -> {
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.setFetchSize(1_000);
+			for (int index = 0; index < params.length; index++) {
+				statement.setObject(index + 1, params[index]);
+			}
+			return statement;
+		};
+	}
+
+	private Object resultSetValue(java.sql.ResultSet resultSet, String columnName) {
+		try {
+			return resultSet.getObject(columnName);
 		}
-		return builder.toString();
+		catch (SQLException exception) {
+			throw new IllegalStateException("Cannot read report column: " + columnName, exception);
+		}
+	}
+
+	private void writeLine(BufferedWriter writer, String value) {
+		try {
+			writer.write(value);
+			writer.newLine();
+		}
+		catch (IOException exception) {
+			throw new UncheckedIOException(exception);
+		}
 	}
 
 	private String escape(Object value) {

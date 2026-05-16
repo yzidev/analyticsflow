@@ -13,13 +13,19 @@ SLEEP_SECONDS ?= 1
 P95_THRESHOLD ?= p(95)<2000
 P99_THRESHOLD ?= p(99)<5000
 ERROR_RATE_THRESHOLD ?= rate<0.01
+BENCHMARK_RESULTS_DIR ?= data/benchmark-results
+BENCHMARK_RESULT_FILE ?= $(BENCHMARK_RESULTS_DIR)/$(BENCHMARK)-$(shell date +%Y%m%d-%H%M%S).json
+BENCHMARK_STATS_FILE ?= $(BENCHMARK_RESULT_FILE:.json=.stats.csv)
+STATS_INTERVAL_SECONDS ?= 2
+BENCHMARK_RUNS ?= 3
+BENCHMARK_COMPARE_RUNS ?= 1
 
 COMMA := ,
 SAMPLE_DIR_JSON := $(if $(strip $(SAMPLE_DIR)),"sampleDirectory":"$(SAMPLE_DIR)")
 IMPORT_SAMPLE_JSON := $(if $(strip $(SAMPLE_DIR)),"sampleDirectory":"$(SAMPLE_DIR)",)
 IMPORT_COMMA := $(if $(strip $(SAMPLE_DIR)),$(COMMA),)
 
-.PHONY: help test package run db-up db-down db-logs db-tables compose-up compose-up-detached compose-down compose-logs health metrics validate validate-sample import import-jpa import-jdbc import-copy import-resume jobs reports report report-download benchmark benchmark-all clean-reports
+.PHONY: help test package run db-up db-down db-logs db-tables compose-up compose-up-detached compose-down compose-logs health metrics validate validate-sample import import-jpa import-jdbc import-copy import-resume jobs reports report report-download benchmark benchmark-save benchmark-save-stats benchmark-all benchmark-all-save benchmark-all-save-stats benchmark-repeat-save-stats benchmark-compare clean-reports
 
 help:
 	@printf '%s\n' 'AnalyticsFlow commands'
@@ -59,6 +65,11 @@ help:
 	@printf '%s\n' '  make benchmark BENCHMARK=completable-future'
 	@printf '%s\n' '  make benchmark BENCHMARK=reactive'
 	@printf '%s\n' '  make benchmark-all'
+	@printf '%s\n' '  make benchmark-save BENCHMARK=blocking'
+	@printf '%s\n' '  make benchmark-all-save'
+	@printf '%s\n' '  make benchmark-all-save-stats'
+	@printf '%s\n' '  make benchmark-repeat-save-stats BENCHMARK_RUNS=3'
+	@printf '%s\n' '  make benchmark-compare'
 
 test:
 	./mvnw -q test
@@ -155,11 +166,52 @@ benchmark:
 	P95_THRESHOLD='$(P95_THRESHOLD)' P99_THRESHOLD='$(P99_THRESHOLD)' ERROR_RATE_THRESHOLD='$(ERROR_RATE_THRESHOLD)' \
 	k6 run "benchmark/$(BENCHMARK).js"
 
+benchmark-save:
+	@mkdir -p "$(BENCHMARK_RESULTS_DIR)"
+	BASE_URL="$(APP_URL)" VUS="$(VUS)" DURATION="$(DURATION)" SLEEP_SECONDS="$(SLEEP_SECONDS)" \
+	P95_THRESHOLD='$(P95_THRESHOLD)' P99_THRESHOLD='$(P99_THRESHOLD)' ERROR_RATE_THRESHOLD='$(ERROR_RATE_THRESHOLD)' \
+	k6 run --summary-export "$(BENCHMARK_RESULT_FILE)" "benchmark/$(BENCHMARK).js"
+	@printf '%s\n' "Saved benchmark summary to $(BENCHMARK_RESULT_FILE)"
+
+benchmark-save-stats:
+	BENCHMARK="$(BENCHMARK)" APP_URL="$(APP_URL)" VUS="$(VUS)" DURATION="$(DURATION)" SLEEP_SECONDS="$(SLEEP_SECONDS)" \
+	P95_THRESHOLD='$(P95_THRESHOLD)' P99_THRESHOLD='$(P99_THRESHOLD)' ERROR_RATE_THRESHOLD='$(ERROR_RATE_THRESHOLD)' \
+	BENCHMARK_RESULTS_DIR="$(BENCHMARK_RESULTS_DIR)" BENCHMARK_RESULT_FILE="$(BENCHMARK_RESULT_FILE)" \
+	BENCHMARK_STATS_FILE="$(BENCHMARK_STATS_FILE)" STATS_INTERVAL_SECONDS="$(STATS_INTERVAL_SECONDS)" \
+	bash benchmark/run-with-stats.sh
+
 benchmark-all:
 	$(MAKE) benchmark BENCHMARK=blocking
 	$(MAKE) benchmark BENCHMARK=virtual-thread
 	$(MAKE) benchmark BENCHMARK=completable-future
 	$(MAKE) benchmark BENCHMARK=reactive
+
+benchmark-all-save:
+	-$(MAKE) benchmark-save BENCHMARK=blocking
+	-$(MAKE) benchmark-save BENCHMARK=virtual-thread
+	-$(MAKE) benchmark-save BENCHMARK=completable-future
+	-$(MAKE) benchmark-save BENCHMARK=reactive
+
+benchmark-all-save-stats:
+	-$(MAKE) benchmark-save-stats BENCHMARK=blocking
+	-$(MAKE) benchmark-save-stats BENCHMARK=virtual-thread
+	-$(MAKE) benchmark-save-stats BENCHMARK=completable-future
+	-$(MAKE) benchmark-save-stats BENCHMARK=reactive
+	$(MAKE) benchmark-compare
+
+benchmark-repeat-save-stats:
+	@run=1; while [ $$run -le "$(BENCHMARK_RUNS)" ]; do \
+		printf '%s\n' "Benchmark suite run $$run/$(BENCHMARK_RUNS)"; \
+		$(MAKE) benchmark-save-stats BENCHMARK=blocking || true; \
+		$(MAKE) benchmark-save-stats BENCHMARK=virtual-thread || true; \
+		$(MAKE) benchmark-save-stats BENCHMARK=completable-future || true; \
+		$(MAKE) benchmark-save-stats BENCHMARK=reactive || true; \
+		run=$$((run + 1)); \
+	done
+	$(MAKE) benchmark-compare BENCHMARK_COMPARE_RUNS="$(BENCHMARK_RUNS)"
+
+benchmark-compare:
+	BENCHMARK_RESULTS_DIR="$(BENCHMARK_RESULTS_DIR)" BENCHMARK_COMPARE_RUNS="$(BENCHMARK_COMPARE_RUNS)" node benchmark/compare-results.js
 
 clean-reports:
 	find data/reports -type f ! -name '.gitkeep' -delete

@@ -1,11 +1,19 @@
 package com.yzidev.analyticsflow.batch.migration;
 
+import java.time.Duration;
+import java.util.function.IntSupplier;
+import java.util.function.LongSupplier;
+
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class StagingMigrationService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(StagingMigrationService.class);
 
 	private static final String AMOUNT_PATTERN = "^-?\\d+(\\.\\d+)?$";
 	private static final String DATE_PATTERN = "^\\d{4}-\\d{2}-\\d{2}$";
@@ -20,35 +28,107 @@ public class StagingMigrationService {
 
 	@Transactional(transactionManager = "transactionManager")
 	public MigrationResult migrateMasterData(String jobId) {
-		long read = count(jobId, "analyticsflow_staging.stg_users")
-				+ count(jobId, "analyticsflow_staging.stg_product_categories")
-				+ count(jobId, "analyticsflow_staging.stg_products")
-				+ count(jobId, "analyticsflow_staging.stg_product_details");
-		long invalid = insertInvalidUsers(jobId)
-				+ insertInvalidProductCategories(jobId)
-				+ insertInvalidProducts(jobId)
-				+ insertInvalidProductDetails(jobId);
-		long written = insertUsers(jobId)
-				+ insertProductCategories(jobId)
-				+ insertProducts(jobId)
-				+ insertProductDetails(jobId);
-		return new MigrationResult(read, written, invalid);
+		String stepName = "MIGRATE_MASTER_DATA";
+		LOGGER.info("migration_step_started jobId={} step={}", jobId, stepName);
+		long read = countWithProgress(jobId, stepName, "stg_users", "analyticsflow_staging.stg_users")
+				+ countWithProgress(jobId, stepName, "stg_product_categories",
+						"analyticsflow_staging.stg_product_categories")
+				+ countWithProgress(jobId, stepName, "stg_products", "analyticsflow_staging.stg_products")
+				+ countWithProgress(jobId, stepName, "stg_product_details",
+						"analyticsflow_staging.stg_product_details");
+		long invalid = updateWithProgress(jobId, stepName, "insert_invalid_users", () -> insertInvalidUsers(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_invalid_product_categories",
+						() -> insertInvalidProductCategories(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_invalid_products",
+						() -> insertInvalidProducts(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_invalid_product_details",
+						() -> insertInvalidProductDetails(jobId));
+		long written = updateWithProgress(jobId, stepName, "insert_users", () -> insertUsers(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_product_categories",
+						() -> insertProductCategories(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_products", () -> insertProducts(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_product_details",
+						() -> insertProductDetails(jobId));
+		return migrationResult(jobId, stepName, read, written, invalid);
 	}
 
 	@Transactional(transactionManager = "transactionManager")
 	public MigrationResult migrateOrderData(String jobId) {
-		long read = count(jobId, "analyticsflow_staging.stg_orders") + count(jobId, "analyticsflow_staging.stg_order_items");
-		long invalid = insertInvalidOrders(jobId) + insertInvalidOrderItems(jobId);
-		long written = insertOrders(jobId) + insertOrderItems(jobId);
-		return new MigrationResult(read, written, invalid);
+		String stepName = "MIGRATE_ORDER_DATA";
+		LOGGER.info("migration_step_started jobId={} step={}", jobId, stepName);
+		long read = countWithProgress(jobId, stepName, "stg_orders", "analyticsflow_staging.stg_orders")
+				+ countWithProgress(jobId, stepName, "stg_order_items", "analyticsflow_staging.stg_order_items");
+		long invalid = updateWithProgress(jobId, stepName, "insert_invalid_orders",
+				() -> insertInvalidOrders(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_invalid_order_items",
+						() -> insertInvalidOrderItems(jobId));
+		long written = updateWithProgress(jobId, stepName, "insert_orders", () -> insertOrders(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_order_items", () -> insertOrderItems(jobId));
+		return migrationResult(jobId, stepName, read, written, invalid);
 	}
 
 	@Transactional(transactionManager = "transactionManager")
 	public MigrationResult migrateTransactionAndDeliveryData(String jobId) {
-		long read = count(jobId, "analyticsflow_staging.stg_transactions") + count(jobId, "analyticsflow_staging.stg_deliveries");
-		long invalid = insertInvalidTransactions(jobId) + insertInvalidDeliveries(jobId);
-		long written = insertTransactions(jobId) + insertDeliveries(jobId);
+		String stepName = "MIGRATE_TRANSACTION_AND_DELIVERY_DATA";
+		LOGGER.info("migration_step_started jobId={} step={}", jobId, stepName);
+		long read = countWithProgress(jobId, stepName, "stg_transactions",
+				"analyticsflow_staging.stg_transactions")
+				+ countWithProgress(jobId, stepName, "stg_deliveries", "analyticsflow_staging.stg_deliveries");
+		long invalid = updateWithProgress(jobId, stepName, "insert_invalid_transactions",
+				() -> insertInvalidTransactions(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_invalid_deliveries",
+						() -> insertInvalidDeliveries(jobId));
+		long written = updateWithProgress(jobId, stepName, "insert_transactions",
+				() -> insertTransactions(jobId))
+				+ updateWithProgress(jobId, stepName, "insert_deliveries", () -> insertDeliveries(jobId));
+		return migrationResult(jobId, stepName, read, written, invalid);
+	}
+
+	private long countWithProgress(String jobId, String stepName, String phase, String tableName) {
+		return longPhase(jobId, stepName, "count_" + phase, () -> count(jobId, tableName));
+	}
+
+	private int updateWithProgress(String jobId, String stepName, String phase, IntSupplier operation) {
+		long startedAt = System.nanoTime();
+		LOGGER.info("migration_phase_started jobId={} step={} phase={}", jobId, stepName, phase);
+		int affected = operation.getAsInt();
+		LOGGER.info(
+				"migration_phase_finished jobId={} step={} phase={} affected={} durationMs={}",
+				jobId,
+				stepName,
+				phase,
+				affected,
+				durationMs(startedAt));
+		return affected;
+	}
+
+	private long longPhase(String jobId, String stepName, String phase, LongSupplier operation) {
+		long startedAt = System.nanoTime();
+		LOGGER.info("migration_phase_started jobId={} step={} phase={}", jobId, stepName, phase);
+		long result = operation.getAsLong();
+		LOGGER.info(
+				"migration_phase_finished jobId={} step={} phase={} result={} durationMs={}",
+				jobId,
+				stepName,
+				phase,
+				result,
+				durationMs(startedAt));
+		return result;
+	}
+
+	private MigrationResult migrationResult(String jobId, String stepName, long read, long written, long invalid) {
+		LOGGER.info(
+				"migration_step_finished jobId={} step={} read={} written={} invalid={}",
+				jobId,
+				stepName,
+				read,
+				written,
+				invalid);
 		return new MigrationResult(read, written, invalid);
+	}
+
+	private long durationMs(long startedAt) {
+		return Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
 	}
 
 	private long count(String jobId, String tableName) {

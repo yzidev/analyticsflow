@@ -41,7 +41,13 @@ public class StepProgressListener implements StepExecutionListener {
 		step.setJobId(jobId);
 		step.setStepName(stepName);
 		step.setStatus(EtlJobStatus.RUNNING);
+		step.setReadCount(0L);
+		step.setWriteCount(0L);
+		step.setSkipCount(0L);
 		step.setStartedAt(stepExecution.getStartTime());
+		step.setFinishedAt(null);
+		step.setDurationMs(null);
+		step.setErrorMessage(null);
 		step.setUpdatedAt(LocalDateTime.now());
 		etlJobStepRepository.save(step);
 		LOGGER.info("etl_step_started jobId={} step={}", jobId, stepName.name());
