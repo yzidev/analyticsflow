@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import com.yzidev.analyticsflow.common.enums.PaymentMethod;
 import com.yzidev.analyticsflow.common.enums.TransactionStatus;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,7 +26,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "transactions", indexes = {
+@Table(schema = DbSchemas.OLTP, name = "transactions", indexes = {
 		@Index(name = "idx_transactions_transaction_id", columnList = "transaction_id"),
 		@Index(name = "idx_transactions_order_id", columnList = "order_id"),
 		@Index(name = "idx_transactions_user_id", columnList = "user_id"),

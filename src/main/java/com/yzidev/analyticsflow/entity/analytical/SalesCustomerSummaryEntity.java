@@ -3,6 +3,8 @@ package com.yzidev.analyticsflow.entity.analytical;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +20,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "sales_customer_summary", indexes = {
+@Table(schema = DbSchemas.OLAP, name = "sales_customer_summary", indexes = {
 		@Index(name = "idx_sales_customer_summary_user_id", columnList = "user_id")
 })
 public class SalesCustomerSummaryEntity {

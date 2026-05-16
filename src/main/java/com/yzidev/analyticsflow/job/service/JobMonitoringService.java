@@ -158,7 +158,7 @@ public class JobMonitoringService {
 		}
 	}
 
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	protected void markJobFailed(String jobId, Exception exception) {
 		EtlJobEntity job = findJob(jobId);
 		job.setStatus(EtlJobStatus.FAILED);

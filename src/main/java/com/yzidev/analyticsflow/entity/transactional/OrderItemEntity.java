@@ -2,6 +2,8 @@ package com.yzidev.analyticsflow.entity.transactional;
 
 import java.math.BigDecimal;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,7 +20,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "order_items", indexes = {
+@Table(schema = DbSchemas.OLTP, name = "order_items", indexes = {
 		@Index(name = "idx_order_items_order_item_id", columnList = "order_item_id"),
 		@Index(name = "idx_order_items_order_id", columnList = "order_id"),
 		@Index(name = "idx_order_items_product_id", columnList = "product_id")

@@ -53,12 +53,12 @@ public class ReportExportService {
 		this.metrics = metrics;
 	}
 
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public ReportMetadataResponse generate(GenerateReportRequest request) {
 		return generate(request, null);
 	}
 
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public ReportMetadataResponse generate(GenerateReportRequest request, String jobId) {
 		validateRequest(request);
 		Instant startedAt = Instant.now();
@@ -107,7 +107,7 @@ public class ReportExportService {
 		return toResponse(saved);
 	}
 
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public List<ReportMetadataResponse> generateInitialReports(String jobId) {
 		return java.util.Arrays.stream(ReportType.values())
 				.map(reportType -> generate(new GenerateReportRequest(reportType, null, null, ReportFormat.CSV), jobId))

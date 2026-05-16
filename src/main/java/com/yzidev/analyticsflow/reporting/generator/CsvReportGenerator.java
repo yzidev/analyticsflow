@@ -39,7 +39,7 @@ public class CsvReportGenerator {
 						select summary_date, total_orders, total_items_sold, total_gross_revenue,
 						       total_paid_revenue, total_success_transactions, total_failed_transactions,
 						       total_shipped_orders, total_delivered_orders
-						from sales_daily_summary
+						from analyticsflow_olap.sales_daily_summary
 						where (?::date is null or summary_date >= ?::date)
 						  and (?::date is null or summary_date <= ?::date)
 						order by summary_date
@@ -53,7 +53,7 @@ public class CsvReportGenerator {
 				jdbcTemplate.queryForList("""
 						select product_id, product_name, category_id, category_name, brand,
 						       total_orders, total_quantity_sold, total_revenue
-						from sales_product_summary
+						from analyticsflow_olap.sales_product_summary
 						order by total_revenue desc, product_id
 						"""));
 	}
@@ -65,7 +65,7 @@ public class CsvReportGenerator {
 				jdbcTemplate.queryForList("""
 						select user_id, full_name, email, city, country, total_orders,
 						       total_items_purchased, total_spent, last_order_date
-						from sales_customer_summary
+						from analyticsflow_olap.sales_customer_summary
 						order by total_spent desc, user_id
 						"""));
 	}
@@ -79,7 +79,7 @@ public class CsvReportGenerator {
 						select summary_date, courier_name, total_shipments, total_pending, total_shipped,
 						       total_in_transit, total_delivered, total_failed, total_returned,
 						       average_delivery_duration_hours
-						from delivery_performance_summary
+						from analyticsflow_olap.delivery_performance_summary
 						where (?::date is null or summary_date >= ?::date)
 						  and (?::date is null or summary_date <= ?::date)
 						order by summary_date, courier_name
@@ -93,7 +93,7 @@ public class CsvReportGenerator {
 				jdbcTemplate.queryForList("""
 						select summary_date, payment_method, currency, total_transactions,
 						       total_success, total_failed, total_pending, total_amount
-						from payment_method_summary
+						from analyticsflow_olap.payment_method_summary
 						where (?::date is null or summary_date >= ?::date)
 						  and (?::date is null or summary_date <= ?::date)
 						order by summary_date, payment_method, currency
@@ -107,7 +107,7 @@ public class CsvReportGenerator {
 				jdbcTemplate.queryForList("""
 						select summary_date, channel, total_orders, total_items_sold,
 						       total_revenue, total_success_transactions
-						from channel_sales_summary
+						from analyticsflow_olap.channel_sales_summary
 						where (?::date is null or summary_date >= ?::date)
 						  and (?::date is null or summary_date <= ?::date)
 						order by summary_date, channel

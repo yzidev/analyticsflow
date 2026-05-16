@@ -3,6 +3,8 @@ package com.yzidev.analyticsflow.entity.transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,7 +21,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "products", indexes = {
+@Table(schema = DbSchemas.OLTP, name = "products", indexes = {
 		@Index(name = "idx_products_product_id", columnList = "product_id"),
 		@Index(name = "idx_products_category_id", columnList = "category_id")
 })

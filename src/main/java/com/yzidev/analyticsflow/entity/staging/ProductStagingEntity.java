@@ -1,5 +1,7 @@
 package com.yzidev.analyticsflow.entity.staging;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -12,7 +14,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "stg_products", indexes = {
+@Table(schema = DbSchemas.STAGING, name = "stg_products", indexes = {
 		@Index(name = "idx_stg_products_job_id", columnList = "job_id"),
 		@Index(name = "idx_stg_products_product_id", columnList = "product_id"),
 		@Index(name = "idx_stg_products_category_id", columnList = "category_id")

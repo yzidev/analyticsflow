@@ -28,7 +28,7 @@ public class JdbcAnalyticsReportRepository implements BlockingAnalyticsReportRep
 					COALESCE(SUM(total_gross_revenue), 0) AS total_revenue,
 					COALESCE(SUM(total_delivered_orders), 0) AS total_delivered_orders,
 					COALESCE(SUM(total_success_transactions), 0) AS total_successful_transactions
-				FROM sales_daily_summary
+				FROM analyticsflow_olap.sales_daily_summary
 				""", (rs, rowNum) -> new ReportSlice(
 				rs.getLong("total_orders"),
 				rs.getLong("total_items_sold"),
@@ -44,7 +44,7 @@ public class JdbcAnalyticsReportRepository implements BlockingAnalyticsReportRep
 	public ReportSlice salesProductSummary() {
 		return jdbcTemplate.queryForObject("""
 				SELECT COALESCE(COUNT(DISTINCT product_id), 0) AS total_products
-				FROM sales_product_summary
+				FROM analyticsflow_olap.sales_product_summary
 				""", (rs, rowNum) -> new ReportSlice(0, 0, BigDecimal.ZERO, 0,
 				rs.getLong("total_products"), 0, 0, null));
 	}
@@ -53,7 +53,7 @@ public class JdbcAnalyticsReportRepository implements BlockingAnalyticsReportRep
 	public ReportSlice salesCustomerSummary() {
 		return jdbcTemplate.queryForObject("""
 				SELECT COALESCE(COUNT(DISTINCT user_id), 0) AS total_customers
-				FROM sales_customer_summary
+				FROM analyticsflow_olap.sales_customer_summary
 				""", (rs, rowNum) -> new ReportSlice(0, 0, BigDecimal.ZERO,
 				rs.getLong("total_customers"), 0, 0, 0, null));
 	}
@@ -62,7 +62,7 @@ public class JdbcAnalyticsReportRepository implements BlockingAnalyticsReportRep
 	public ReportSlice deliveryPerformanceSummary() {
 		return jdbcTemplate.queryForObject("""
 				SELECT COALESCE(SUM(total_delivered), 0) AS total_delivered_orders
-				FROM delivery_performance_summary
+				FROM analyticsflow_olap.delivery_performance_summary
 				""", (rs, rowNum) -> new ReportSlice(0, 0, BigDecimal.ZERO, 0, 0,
 				rs.getLong("total_delivered_orders"), 0, null));
 	}
@@ -71,7 +71,7 @@ public class JdbcAnalyticsReportRepository implements BlockingAnalyticsReportRep
 	public ReportSlice paymentMethodSummary() {
 		return jdbcTemplate.queryForObject("""
 				SELECT COALESCE(SUM(total_success), 0) AS total_successful_transactions
-				FROM payment_method_summary
+				FROM analyticsflow_olap.payment_method_summary
 				""", (rs, rowNum) -> new ReportSlice(0, 0, BigDecimal.ZERO, 0, 0, 0,
 				rs.getLong("total_successful_transactions"), null));
 	}
@@ -80,7 +80,7 @@ public class JdbcAnalyticsReportRepository implements BlockingAnalyticsReportRep
 	public ReportSlice channelSalesSummary() {
 		List<ReportSlice> slices = jdbcTemplate.query("""
 				SELECT channel
-				FROM channel_sales_summary
+				FROM analyticsflow_olap.channel_sales_summary
 				GROUP BY channel
 				ORDER BY SUM(total_revenue) DESC NULLS LAST
 				LIMIT 1

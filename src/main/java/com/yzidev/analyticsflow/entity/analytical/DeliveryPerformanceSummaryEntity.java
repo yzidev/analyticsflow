@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +21,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "delivery_performance_summary", indexes = {
+@Table(schema = DbSchemas.OLAP, name = "delivery_performance_summary", indexes = {
 		@Index(name = "idx_delivery_performance_summary_summary_date", columnList = "summary_date"),
 		@Index(name = "idx_delivery_performance_summary_courier_name", columnList = "courier_name")
 })

@@ -17,15 +17,17 @@ SAMPLE_DIR_JSON := $(if $(strip $(SAMPLE_DIR)),"sampleDirectory":"$(SAMPLE_DIR)"
 IMPORT_SAMPLE_JSON := $(if $(strip $(SAMPLE_DIR)),"sampleDirectory":"$(SAMPLE_DIR)",)
 IMPORT_COMMA := $(if $(strip $(SAMPLE_DIR)),$(COMMA),)
 
-.PHONY: help test package run db-up db-down db-logs compose-up compose-down compose-logs health metrics validate validate-sample import jobs reports report report-download benchmark benchmark-all clean-reports
+.PHONY: help test package run db-up db-down db-logs db-tables compose-up compose-up-detached compose-down compose-logs health metrics validate validate-sample import jobs reports report report-download benchmark benchmark-all clean-reports
 
 help:
 	@printf '%s\n' 'AnalyticsFlow commands'
 	@printf '%s\n' ''
 	@printf '%s\n' 'Local development:'
 	@printf '%s\n' '  make db-up                  Start PostgreSQL only'
+	@printf '%s\n' '  make db-tables              List tables in Docker PostgreSQL'
 	@printf '%s\n' '  make run                    Run Spring Boot app with Maven'
 	@printf '%s\n' '  make compose-up             Build and run app + PostgreSQL'
+	@printf '%s\n' '  make compose-up-detached    Build and run app + PostgreSQL in background'
 	@printf '%s\n' '  make compose-down           Stop Docker Compose services'
 	@printf '%s\n' '  make test                   Run Maven tests'
 	@printf '%s\n' '  make package                Build jar with tests'
@@ -67,8 +69,14 @@ db-down:
 db-logs:
 	docker compose logs -f postgres
 
+db-tables:
+	docker compose exec -T postgres psql -U analyticsflow -d analyticsflow -c "select table_schema, table_name from information_schema.tables where table_schema not in ('pg_catalog','information_schema') order by table_schema, table_name;"
+
 compose-up:
 	docker compose up --build
+
+compose-up-detached:
+	docker compose up --build -d
 
 compose-down:
 	docker compose down

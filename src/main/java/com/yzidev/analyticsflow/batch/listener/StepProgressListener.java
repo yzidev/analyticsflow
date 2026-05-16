@@ -28,7 +28,7 @@ public class StepProgressListener implements StepExecutionListener {
 	}
 
 	@Override
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public void beforeStep(StepExecution stepExecution) {
 		String jobId = jobId(stepExecution);
 		EtlStepName stepName = EtlStepName.valueOf(stepExecution.getStepName());
@@ -43,7 +43,7 @@ public class StepProgressListener implements StepExecutionListener {
 	}
 
 	@Override
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public ExitStatus afterStep(StepExecution stepExecution) {
 		String jobId = jobId(stepExecution);
 		EtlStepName stepName = EtlStepName.valueOf(stepExecution.getStepName());

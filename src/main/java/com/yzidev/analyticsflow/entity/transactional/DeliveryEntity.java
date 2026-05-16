@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import com.yzidev.analyticsflow.common.enums.DeliveryStatus;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,7 +24,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "deliveries", indexes = {
+@Table(schema = DbSchemas.OLTP, name = "deliveries", indexes = {
 		@Index(name = "idx_deliveries_delivery_id", columnList = "delivery_id"),
 		@Index(name = "idx_deliveries_order_id", columnList = "order_id"),
 		@Index(name = "idx_deliveries_delivery_status", columnList = "delivery_status")

@@ -13,16 +13,16 @@ public class AnalyticalTransformationService {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public TransformationResult transform() {
-		long read = count("users")
-				+ count("product_categories")
-				+ count("products")
-				+ count("product_details")
-				+ count("orders")
-				+ count("order_items")
-				+ count("transactions")
-				+ count("deliveries");
+		long read = count("analyticsflow_oltp.users")
+				+ count("analyticsflow_oltp.product_categories")
+				+ count("analyticsflow_oltp.products")
+				+ count("analyticsflow_oltp.product_details")
+				+ count("analyticsflow_oltp.orders")
+				+ count("analyticsflow_oltp.order_items")
+				+ count("analyticsflow_oltp.transactions")
+				+ count("analyticsflow_oltp.deliveries");
 		long written = transformSalesDailySummary()
 				+ transformSalesProductSummary()
 				+ transformSalesCustomerSummary()
@@ -41,26 +41,26 @@ public class AnalyticalTransformationService {
 		return jdbcTemplate.update(
 				"""
 				with summary_dates as (
-				    select order_date::date as summary_date from orders
+				    select order_date::date as summary_date from analyticsflow_oltp.orders
 				    union
-				    select transaction_date::date as summary_date from transactions
+				    select transaction_date::date as summary_date from analyticsflow_oltp.transactions
 				    union
 				    select coalesce(delivered_date, shipped_date, created_at)::date as summary_date
-				    from deliveries
+				    from analyticsflow_oltp.deliveries
 				    where coalesce(delivered_date, shipped_date, created_at) is not null
 				),
 				order_metrics as (
 				    select order_date::date as summary_date,
 				           count(*) as total_orders,
 				           coalesce(sum(total_amount), 0) as total_gross_revenue
-				    from orders
+				    from analyticsflow_oltp.orders
 				    group by order_date::date
 				),
 				item_metrics as (
 				    select o.order_date::date as summary_date,
 				           coalesce(sum(oi.quantity), 0) as total_items_sold
-				    from orders o
-				    join order_items oi on oi.order_id = o.order_id
+				    from analyticsflow_oltp.orders o
+				    join analyticsflow_oltp.order_items oi on oi.order_id = o.order_id
 				    group by o.order_date::date
 				),
 				transaction_metrics as (
@@ -68,18 +68,18 @@ public class AnalyticalTransformationService {
 				           coalesce(sum(case when status = 'SUCCESS' then amount else 0 end), 0) as total_paid_revenue,
 				           count(*) filter (where status = 'SUCCESS') as total_success_transactions,
 				           count(*) filter (where status = 'FAILED') as total_failed_transactions
-				    from transactions
+				    from analyticsflow_oltp.transactions
 				    group by transaction_date::date
 				),
 				delivery_metrics as (
 				    select coalesce(delivered_date, shipped_date, created_at)::date as summary_date,
 				           count(*) filter (where delivery_status in ('SHIPPED', 'IN_TRANSIT', 'DELIVERED')) as total_shipped_orders,
 				           count(*) filter (where delivery_status = 'DELIVERED') as total_delivered_orders
-				    from deliveries
+				    from analyticsflow_oltp.deliveries
 				    where coalesce(delivered_date, shipped_date, created_at) is not null
 				    group by coalesce(delivered_date, shipped_date, created_at)::date
 				)
-				insert into sales_daily_summary (
+				insert into analyticsflow_olap.sales_daily_summary (
 				    summary_date, total_orders, total_items_sold, total_gross_revenue,
 				    total_paid_revenue, total_success_transactions, total_failed_transactions,
 				    total_shipped_orders, total_delivered_orders, created_at, updated_at
@@ -116,7 +116,7 @@ public class AnalyticalTransformationService {
 	private int transformSalesProductSummary() {
 		return jdbcTemplate.update(
 				"""
-				insert into sales_product_summary (
+				insert into analyticsflow_olap.sales_product_summary (
 				    product_id, product_name, category_id, category_name, brand,
 				    total_orders, total_quantity_sold, total_revenue, created_at, updated_at
 				)
@@ -130,9 +130,9 @@ public class AnalyticalTransformationService {
 				       coalesce(sum(oi.total_price), 0),
 				       current_timestamp,
 				       current_timestamp
-				from products p
-				left join product_categories pc on pc.category_id = p.category_id
-				left join order_items oi on oi.product_id = p.product_id
+				from analyticsflow_oltp.products p
+				left join analyticsflow_oltp.product_categories pc on pc.category_id = p.category_id
+				left join analyticsflow_oltp.order_items oi on oi.product_id = p.product_id
 				group by p.product_id, p.product_name, p.category_id, pc.category_name, p.brand
 				on conflict (product_id) do update set
 				    product_name = excluded.product_name,
@@ -154,17 +154,17 @@ public class AnalyticalTransformationService {
 				           count(*) as total_orders,
 				           coalesce(sum(total_amount), 0) as total_spent,
 				           max(order_date) as last_order_date
-				    from orders
+				    from analyticsflow_oltp.orders
 				    group by user_id
 				),
 				item_metrics as (
 				    select o.user_id,
 				           coalesce(sum(oi.quantity), 0) as total_items_purchased
-				    from orders o
-				    join order_items oi on oi.order_id = o.order_id
+				    from analyticsflow_oltp.orders o
+				    join analyticsflow_oltp.order_items oi on oi.order_id = o.order_id
 				    group by o.user_id
 				)
-				insert into sales_customer_summary (
+				insert into analyticsflow_olap.sales_customer_summary (
 				    user_id, full_name, email, city, country, total_orders,
 				    total_items_purchased, total_spent, last_order_date, created_at, updated_at
 				)
@@ -179,7 +179,7 @@ public class AnalyticalTransformationService {
 				       o.last_order_date,
 				       current_timestamp,
 				       current_timestamp
-				from users u
+				from analyticsflow_oltp.users u
 				left join order_metrics o on o.user_id = u.user_id
 				left join item_metrics i on i.user_id = u.user_id
 				on conflict (user_id) do update set
@@ -198,7 +198,7 @@ public class AnalyticalTransformationService {
 	private int transformDeliveryPerformanceSummary() {
 		return jdbcTemplate.update(
 				"""
-				insert into delivery_performance_summary (
+				insert into analyticsflow_olap.delivery_performance_summary (
 				    summary_date, courier_name, total_shipments, total_pending, total_shipped,
 				    total_in_transit, total_delivered, total_failed, total_returned,
 				    average_delivery_duration_hours, created_at, updated_at
@@ -216,7 +216,7 @@ public class AnalyticalTransformationService {
 				           filter (where delivered_date is not null and shipped_date is not null))::numeric, 2),
 				       current_timestamp,
 				       current_timestamp
-				from deliveries
+				from analyticsflow_oltp.deliveries
 				where coalesce(delivered_date, shipped_date, created_at) is not null
 				group by coalesce(delivered_date, shipped_date, created_at)::date, courier_name
 				on conflict (summary_date, courier_name) do update set
@@ -235,7 +235,7 @@ public class AnalyticalTransformationService {
 	private int transformPaymentMethodSummary() {
 		return jdbcTemplate.update(
 				"""
-				insert into payment_method_summary (
+				insert into analyticsflow_olap.payment_method_summary (
 				    summary_date, payment_method, currency, total_transactions, total_success,
 				    total_failed, total_pending, total_amount, created_at, updated_at
 				)
@@ -249,7 +249,7 @@ public class AnalyticalTransformationService {
 				       coalesce(sum(amount), 0) as total_amount,
 				       current_timestamp,
 				       current_timestamp
-				from transactions
+				from analyticsflow_oltp.transactions
 				group by transaction_date::date, payment_method, currency
 				on conflict (summary_date, payment_method, currency) do update set
 				    total_transactions = excluded.total_transactions,
@@ -269,26 +269,26 @@ public class AnalyticalTransformationService {
 				           channel,
 				           count(*) as total_orders,
 				           coalesce(sum(total_amount), 0) as total_revenue
-				    from orders
+				    from analyticsflow_oltp.orders
 				    group by order_date::date, channel
 				),
 				item_metrics as (
 				    select o.order_date::date as summary_date,
 				           o.channel,
 				           coalesce(sum(oi.quantity), 0) as total_items_sold
-				    from orders o
-				    join order_items oi on oi.order_id = o.order_id
+				    from analyticsflow_oltp.orders o
+				    join analyticsflow_oltp.order_items oi on oi.order_id = o.order_id
 				    group by o.order_date::date, o.channel
 				),
 				transaction_metrics as (
 				    select o.order_date::date as summary_date,
 				           o.channel,
 				           count(*) filter (where t.status = 'SUCCESS') as total_success_transactions
-				    from orders o
-				    join transactions t on t.order_id = o.order_id
+				    from analyticsflow_oltp.orders o
+				    join analyticsflow_oltp.transactions t on t.order_id = o.order_id
 				    group by o.order_date::date, o.channel
 				)
-				insert into channel_sales_summary (
+				insert into analyticsflow_olap.channel_sales_summary (
 				    summary_date, channel, total_orders, total_items_sold,
 				    total_revenue, total_success_transactions, created_at, updated_at
 				)

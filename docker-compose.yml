@@ -23,13 +23,13 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analyticsflow
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analyticsflow?currentSchema=analyticsflow_support,analyticsflow_staging,analyticsflow_oltp,analyticsflow_olap,public
       SPRING_DATASOURCE_USERNAME: analyticsflow
       SPRING_DATASOURCE_PASSWORD: analyticsflow
       SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/analyticsflow
       SPRING_R2DBC_USERNAME: analyticsflow
       SPRING_R2DBC_PASSWORD: analyticsflow
-      ANALYTICSFLOW_DB_BLOCKING_URL: jdbc:postgresql://postgres:5432/analyticsflow
+      ANALYTICSFLOW_DB_BLOCKING_URL: jdbc:postgresql://postgres:5432/analyticsflow?currentSchema=analyticsflow_support,analyticsflow_staging,analyticsflow_oltp,analyticsflow_olap,public
       ANALYTICSFLOW_DB_BLOCKING_USERNAME: analyticsflow
       ANALYTICSFLOW_DB_BLOCKING_PASSWORD: analyticsflow
       ANALYTICSFLOW_DB_REACTIVE_URL: r2dbc:postgresql://postgres:5432/analyticsflow
@@ -38,8 +38,17 @@ services:
       ANALYTICSFLOW_DATA_SOURCE_DIRECTORY: /app/data/files
       ANALYTICSFLOW_DATA_SAMPLE_DIRECTORY: /app/data/sample
       ANALYTICSFLOW_DATA_REPORTS_DIRECTORY: /app/data/reports
+      JAVA_TOOL_OPTIONS: >-
+        -Dcom.sun.management.jmxremote
+        -Dcom.sun.management.jmxremote.port=9010
+        -Dcom.sun.management.jmxremote.rmi.port=9010
+        -Dcom.sun.management.jmxremote.local.only=false
+        -Dcom.sun.management.jmxremote.authenticate=false
+        -Dcom.sun.management.jmxremote.ssl=false
+        -Djava.rmi.server.hostname=localhost
     ports:
       - "8080:8080"
+      - "9010:9010"
     volumes:
       - ./data:/app/data
 

@@ -6,6 +6,8 @@ import com.yzidev.analyticsflow.common.enums.ReportFormat;
 import com.yzidev.analyticsflow.common.enums.ReportGenerationStatus;
 import com.yzidev.analyticsflow.common.enums.ReportType;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,7 +25,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "report_metadata", indexes = {
+@Table(schema = DbSchemas.SUPPORT, name = "report_metadata", indexes = {
 		@Index(name = "idx_report_metadata_report_id", columnList = "report_id", unique = true),
 		@Index(name = "idx_report_metadata_job_id", columnList = "job_id"),
 		@Index(name = "idx_report_metadata_report_type", columnList = "report_type")

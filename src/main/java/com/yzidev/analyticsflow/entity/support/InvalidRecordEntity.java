@@ -2,6 +2,8 @@ package com.yzidev.analyticsflow.entity.support;
 
 import java.time.LocalDateTime;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +19,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "invalid_records", indexes = {
+@Table(schema = DbSchemas.SUPPORT, name = "invalid_records", indexes = {
 		@Index(name = "idx_invalid_records_job_id", columnList = "job_id"),
 		@Index(name = "idx_invalid_records_source_file", columnList = "source_file"),
 		@Index(name = "idx_invalid_records_source_table", columnList = "source_table")

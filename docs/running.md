@@ -54,6 +54,12 @@ Run PostgreSQL and the app container:
 make compose-up
 ```
 
+Run PostgreSQL and the app container in the background:
+
+```bash
+make compose-up-detached
+```
+
 Stop services:
 
 ```bash
@@ -235,9 +241,25 @@ Stop PostgreSQL:
 make db-down
 ```
 
+Check migrated tables in Docker PostgreSQL:
+
+```bash
+make db-tables
+```
+
+Expected application schemas:
+
+```text
+analyticsflow_staging  -> stg_* raw CSV tables
+analyticsflow_oltp     -> transactional tables
+analyticsflow_olap     -> analytical/reporting tables
+analyticsflow_support  -> ETL support tables and Spring Batch metadata
+```
+
+`public` should only keep Flyway metadata such as `flyway_schema_history`.
+
 Show available commands:
 
 ```bash
 make help
 ```
-

@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 import com.yzidev.analyticsflow.common.enums.SalesChannel;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,7 +25,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "channel_sales_summary", indexes = {
+@Table(schema = DbSchemas.OLAP, name = "channel_sales_summary", indexes = {
 		@Index(name = "idx_channel_sales_summary_summary_date", columnList = "summary_date"),
 		@Index(name = "idx_channel_sales_summary_channel", columnList = "channel")
 })

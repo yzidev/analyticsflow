@@ -26,7 +26,7 @@ public class JobCompletionListener implements JobExecutionListener {
 	}
 
 	@Override
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public void beforeJob(JobExecution jobExecution) {
 		String jobId = jobId(jobExecution);
 		EtlJobEntity job = etlJobRepository.findByJobId(jobId).orElseGet(EtlJobEntity::new);
@@ -40,7 +40,7 @@ public class JobCompletionListener implements JobExecutionListener {
 	}
 
 	@Override
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public void afterJob(JobExecution jobExecution) {
 		String jobId = jobId(jobExecution);
 		EtlJobEntity job = etlJobRepository.findByJobId(jobId).orElseGet(EtlJobEntity::new);

@@ -28,7 +28,7 @@ spring:
 analyticsflow:
   db:
     blocking:
-      url: jdbc:postgresql://localhost:5432/analyticsflow
+      url: jdbc:postgresql://localhost:5432/analyticsflow?currentSchema=analyticsflow_support,analyticsflow_staging,analyticsflow_oltp,analyticsflow_olap,public
     reactive:
       url: r2dbc:postgresql://localhost:5432/analyticsflow
 ```
@@ -72,7 +72,14 @@ The validator checks file presence, `.csv` extension, readability, exact headers
 
 ## Database Tables
 
-Staging tables:
+The schema layout is split by workload:
+
+- `analyticsflow_staging`: staging/raw CSV tables.
+- `analyticsflow_oltp`: transactional tables.
+- `analyticsflow_olap`: analytical/reporting tables.
+- `analyticsflow_support`: ETL support tables and Spring Batch metadata.
+
+Staging tables in `analyticsflow_staging`:
 
 ```text
 stg_users
@@ -85,7 +92,7 @@ stg_transactions
 stg_deliveries
 ```
 
-Transactional tables:
+Transactional tables in `analyticsflow_oltp`:
 
 ```text
 users
@@ -98,7 +105,7 @@ transactions
 deliveries
 ```
 
-Analytical tables:
+Analytical tables in `analyticsflow_olap`:
 
 ```text
 sales_daily_summary
@@ -109,13 +116,19 @@ payment_method_summary
 channel_sales_summary
 ```
 
-Support tables:
+Support tables in `analyticsflow_support`:
 
 ```text
 invalid_records
 etl_job
 etl_job_step
 report_metadata
+batch_job_instance
+batch_job_execution
+batch_job_execution_params
+batch_job_execution_context
+batch_step_execution
+batch_step_execution_context
 ```
 
 ## Batch Flow
@@ -202,10 +215,16 @@ make run
 Or run PostgreSQL and the app through Docker Compose:
 
 ```bash
-make compose-up
+make compose-up-detached
 ```
 
 The compose app mounts `./data:/app/data`, so real large files stay in `data/files` and generated reports stay in `data/reports`.
+
+Check migrated tables in Docker PostgreSQL:
+
+```bash
+make db-tables
+```
 
 Validate the default real files directory:
 

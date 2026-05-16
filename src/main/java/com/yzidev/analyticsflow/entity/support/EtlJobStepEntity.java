@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import com.yzidev.analyticsflow.common.enums.EtlJobStatus;
 import com.yzidev.analyticsflow.common.enums.EtlStepName;
 
+import com.yzidev.analyticsflow.config.DbSchemas;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -22,7 +24,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "etl_job_step", indexes = {
+@Table(schema = DbSchemas.SUPPORT, name = "etl_job_step", indexes = {
 		@Index(name = "idx_etl_job_step_job_id", columnList = "job_id"),
 		@Index(name = "idx_etl_job_step_step_name", columnList = "step_name")
 })

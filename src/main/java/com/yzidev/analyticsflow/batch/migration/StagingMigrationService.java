@@ -18,12 +18,12 @@ public class StagingMigrationService {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public MigrationResult migrateMasterData(String jobId) {
-		long read = count(jobId, "stg_users")
-				+ count(jobId, "stg_product_categories")
-				+ count(jobId, "stg_products")
-				+ count(jobId, "stg_product_details");
+		long read = count(jobId, "analyticsflow_staging.stg_users")
+				+ count(jobId, "analyticsflow_staging.stg_product_categories")
+				+ count(jobId, "analyticsflow_staging.stg_products")
+				+ count(jobId, "analyticsflow_staging.stg_product_details");
 		long invalid = insertInvalidUsers(jobId)
 				+ insertInvalidProductCategories(jobId)
 				+ insertInvalidProducts(jobId)
@@ -35,17 +35,17 @@ public class StagingMigrationService {
 		return new MigrationResult(read, written, invalid);
 	}
 
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public MigrationResult migrateOrderData(String jobId) {
-		long read = count(jobId, "stg_orders") + count(jobId, "stg_order_items");
+		long read = count(jobId, "analyticsflow_staging.stg_orders") + count(jobId, "analyticsflow_staging.stg_order_items");
 		long invalid = insertInvalidOrders(jobId) + insertInvalidOrderItems(jobId);
 		long written = insertOrders(jobId) + insertOrderItems(jobId);
 		return new MigrationResult(read, written, invalid);
 	}
 
-	@Transactional
+	@Transactional(transactionManager = "transactionManager")
 	public MigrationResult migrateTransactionAndDeliveryData(String jobId) {
-		long read = count(jobId, "stg_transactions") + count(jobId, "stg_deliveries");
+		long read = count(jobId, "analyticsflow_staging.stg_transactions") + count(jobId, "analyticsflow_staging.stg_deliveries");
 		long invalid = insertInvalidTransactions(jobId) + insertInvalidDeliveries(jobId);
 		long written = insertTransactions(jobId) + insertDeliveries(jobId);
 		return new MigrationResult(read, written, invalid);
@@ -76,7 +76,7 @@ public class StagingMigrationService {
 				    select s.*,
 				           row_number() over (partition by user_id order by row_number) = 1 as first_row,
 				           source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ? as valid_created_at
-				    from stg_users s
+				    from analyticsflow_staging.stg_users s
 				    where job_id = ? and is_valid = true
 				) s
 				where nullif(trim(user_id), '') is null
@@ -92,13 +92,13 @@ public class StagingMigrationService {
 	private int insertUsers(String jobId) {
 		return jdbcTemplate.update(
 				"""
-				insert into users (user_id, full_name, email, phone, city, country, created_at)
+				insert into analyticsflow_oltp.users (user_id, full_name, email, phone, city, country, created_at)
 				select user_id, full_name, email, phone, city, country,
 				       case when nullif(trim(source_created_at), '') is null then null
 				            else replace(source_created_at, 'T', ' ')::timestamp end
 				from (
 				    select s.*, row_number() over (partition by user_id order by row_number) as duplicate_number
-				    from stg_users s
+				    from analyticsflow_staging.stg_users s
 				    where job_id = ? and is_valid = true
 				) s
 				where duplicate_number = 1
@@ -137,17 +137,17 @@ public class StagingMigrationService {
 				           source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ? as valid_created_at,
 				           exists (
 				               select 1
-				               from product_categories pc
+				               from analyticsflow_oltp.product_categories pc
 				               where pc.category_id = s.parent_category_id
 				           )
 				           or exists (
 				               select 1
-				               from stg_product_categories parent
+				               from analyticsflow_staging.stg_product_categories parent
 				               where parent.job_id = s.job_id
 				                 and parent.is_valid = true
 				                 and parent.category_id = s.parent_category_id
 				           ) as parent_exists
-				    from stg_product_categories s
+				    from analyticsflow_staging.stg_product_categories s
 				    where job_id = ? and is_valid = true
 				) s
 				where nullif(trim(category_id), '') is null
@@ -164,13 +164,13 @@ public class StagingMigrationService {
 	private int insertProductCategories(String jobId) {
 		return jdbcTemplate.update(
 				"""
-				insert into product_categories (category_id, category_name, parent_category_id, description, created_at)
+				insert into analyticsflow_oltp.product_categories (category_id, category_name, parent_category_id, description, created_at)
 				select category_id, category_name, nullif(parent_category_id, ''), description,
 				       case when nullif(trim(source_created_at), '') is null then null
 				            else replace(source_created_at, 'T', ' ')::timestamp end
 				from (
 				    select s.*, row_number() over (partition by category_id order by row_number) as duplicate_number
-				    from stg_product_categories s
+				    from analyticsflow_staging.stg_product_categories s
 				    where job_id = ? and is_valid = true
 				) s
 				where duplicate_number = 1
@@ -180,9 +180,9 @@ public class StagingMigrationService {
 				  and (
 				      parent_category_id is null
 				      or trim(parent_category_id) = ''
-				      or exists (select 1 from product_categories pc where pc.category_id = s.parent_category_id)
+				      or exists (select 1 from analyticsflow_oltp.product_categories pc where pc.category_id = s.parent_category_id)
 				      or exists (
-				          select 1 from stg_product_categories parent
+				          select 1 from analyticsflow_staging.stg_product_categories parent
 				          where parent.job_id = s.job_id and parent.is_valid = true and parent.category_id = s.parent_category_id
 				      )
 				  )
@@ -217,8 +217,8 @@ public class StagingMigrationService {
 				    select s.*,
 				           row_number() over (partition by product_id order by row_number) = 1 as first_row,
 				           source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ? as valid_created_at,
-				           exists (select 1 from product_categories pc where pc.category_id = s.category_id) as category_exists
-				    from stg_products s
+				           exists (select 1 from analyticsflow_oltp.product_categories pc where pc.category_id = s.category_id) as category_exists
+				    from analyticsflow_staging.stg_products s
 				    where job_id = ? and is_valid = true
 				) s
 				where nullif(trim(product_id), '') is null
@@ -241,14 +241,14 @@ public class StagingMigrationService {
 	private int insertProducts(String jobId) {
 		return jdbcTemplate.update(
 				"""
-				insert into products (product_id, category_id, product_name, brand, price, is_active, created_at)
+				insert into analyticsflow_oltp.products (product_id, category_id, product_name, brand, price, is_active, created_at)
 				select product_id, category_id, product_name, brand, price::numeric(19, 2),
 				       lower(trim(is_active)) in ('true', 't', '1', 'yes', 'y'),
 				       case when nullif(trim(source_created_at), '') is null then null
 				            else replace(source_created_at, 'T', ' ')::timestamp end
 				from (
 				    select s.*, row_number() over (partition by product_id order by row_number) as duplicate_number
-				    from stg_products s
+				    from analyticsflow_staging.stg_products s
 				    where job_id = ? and is_valid = true
 				) s
 				where duplicate_number = 1
@@ -259,7 +259,7 @@ public class StagingMigrationService {
 				  and price ~ ?
 				  and lower(trim(is_active)) in ('true', 't', '1', 'yes', 'y', 'false', 'f', '0', 'no', 'n')
 				  and (source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ?)
-				  and exists (select 1 from product_categories pc where pc.category_id = s.category_id)
+				  and exists (select 1 from analyticsflow_oltp.product_categories pc where pc.category_id = s.category_id)
 				on conflict (product_id) do update set
 				    category_id = excluded.category_id,
 				    product_name = excluded.product_name,
@@ -295,8 +295,8 @@ public class StagingMigrationService {
 				    select s.*,
 				           row_number() over (partition by product_detail_id order by row_number) = 1 as first_row,
 				           source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ? as valid_created_at,
-				           exists (select 1 from products p where p.product_id = s.product_id) as product_exists
-				    from stg_product_details s
+				           exists (select 1 from analyticsflow_oltp.products p where p.product_id = s.product_id) as product_exists
+				    from analyticsflow_staging.stg_product_details s
 				    where job_id = ? and is_valid = true
 				) s
 				where nullif(trim(product_detail_id), '') is null
@@ -323,7 +323,7 @@ public class StagingMigrationService {
 	private int insertProductDetails(String jobId) {
 		return jdbcTemplate.update(
 				"""
-				insert into product_details (
+				insert into analyticsflow_oltp.product_details (
 				    product_detail_id, product_id, sku, color, size, weight, material,
 				    manufacture_date, expiry_date, created_at
 				)
@@ -336,7 +336,7 @@ public class StagingMigrationService {
 				            else replace(source_created_at, 'T', ' ')::timestamp end
 				from (
 				    select s.*, row_number() over (partition by product_detail_id order by row_number) as duplicate_number
-				    from stg_product_details s
+				    from analyticsflow_staging.stg_product_details s
 				    where job_id = ? and is_valid = true
 				) s
 				where duplicate_number = 1
@@ -347,7 +347,7 @@ public class StagingMigrationService {
 				  and (manufacture_date is null or trim(manufacture_date) = '' or manufacture_date ~ ?)
 				  and (expiry_date is null or trim(expiry_date) = '' or expiry_date ~ ?)
 				  and (source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ?)
-				  and exists (select 1 from products p where p.product_id = s.product_id)
+				  and exists (select 1 from analyticsflow_oltp.products p where p.product_id = s.product_id)
 				on conflict (product_detail_id) do update set
 				    product_id = excluded.product_id,
 				    sku = excluded.sku,
@@ -390,8 +390,8 @@ public class StagingMigrationService {
 				           upper(replace(replace(trim(channel), '-', '_'), ' ', '_')) as normalize_channel,
 				           row_number() over (partition by order_id order by row_number) = 1 as first_row,
 				           source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ? as valid_created_at,
-				           exists (select 1 from users u where u.user_id = s.user_id) as user_exists
-				    from stg_orders s
+				           exists (select 1 from analyticsflow_oltp.users u where u.user_id = s.user_id) as user_exists
+				    from analyticsflow_staging.stg_orders s
 				    where job_id = ? and is_valid = true
 				) s
 				where nullif(trim(order_id), '') is null
@@ -418,7 +418,7 @@ public class StagingMigrationService {
 	private int insertOrders(String jobId) {
 		return jdbcTemplate.update(
 				"""
-				insert into orders (order_id, user_id, order_date, order_status, total_amount, channel, created_at)
+				insert into analyticsflow_oltp.orders (order_id, user_id, order_date, order_status, total_amount, channel, created_at)
 				select order_id, user_id, replace(order_date, 'T', ' ')::timestamp,
 				       upper(replace(replace(trim(order_status), '-', '_'), ' ', '_')),
 				       total_amount::numeric(19, 2),
@@ -427,7 +427,7 @@ public class StagingMigrationService {
 				            else replace(source_created_at, 'T', ' ')::timestamp end
 				from (
 				    select s.*, row_number() over (partition by order_id order by row_number) as duplicate_number
-				    from stg_orders s
+				    from analyticsflow_staging.stg_orders s
 				    where job_id = ? and is_valid = true
 				) s
 				where duplicate_number = 1
@@ -438,7 +438,7 @@ public class StagingMigrationService {
 				  and total_amount ~ ?
 				  and upper(replace(replace(trim(channel), '-', '_'), ' ', '_')) in ('WEB', 'MOBILE', 'MARKETPLACE', 'OFFLINE')
 				  and (source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ?)
-				  and exists (select 1 from users u where u.user_id = s.user_id)
+				  and exists (select 1 from analyticsflow_oltp.users u where u.user_id = s.user_id)
 				on conflict (order_id) do update set
 				    user_id = excluded.user_id,
 				    order_date = excluded.order_date,
@@ -474,9 +474,9 @@ public class StagingMigrationService {
 				from (
 				    select s.*,
 				           row_number() over (partition by order_item_id order by row_number) = 1 as first_row,
-				           exists (select 1 from orders o where o.order_id = s.order_id) as order_exists,
-				           exists (select 1 from products p where p.product_id = s.product_id) as product_exists
-				    from stg_order_items s
+				           exists (select 1 from analyticsflow_oltp.orders o where o.order_id = s.order_id) as order_exists,
+				           exists (select 1 from analyticsflow_oltp.products p where p.product_id = s.product_id) as product_exists
+				    from analyticsflow_staging.stg_order_items s
 				    where job_id = ? and is_valid = true
 				) s
 				where nullif(trim(order_item_id), '') is null
@@ -505,12 +505,12 @@ public class StagingMigrationService {
 	private int insertOrderItems(String jobId) {
 		return jdbcTemplate.update(
 				"""
-				insert into order_items (order_item_id, order_id, product_id, quantity, unit_price, total_price)
+				insert into analyticsflow_oltp.order_items (order_item_id, order_id, product_id, quantity, unit_price, total_price)
 				select order_item_id, order_id, product_id, quantity::integer,
 				       unit_price::numeric(19, 2), total_price::numeric(19, 2)
 				from (
 				    select s.*, row_number() over (partition by order_item_id order by row_number) as duplicate_number
-				    from stg_order_items s
+				    from analyticsflow_staging.stg_order_items s
 				    where job_id = ? and is_valid = true
 				) s
 				where duplicate_number = 1
@@ -520,8 +520,8 @@ public class StagingMigrationService {
 				  and quantity ~ ?
 				  and unit_price ~ ?
 				  and total_price ~ ?
-				  and exists (select 1 from orders o where o.order_id = s.order_id)
-				  and exists (select 1 from products p where p.product_id = s.product_id)
+				  and exists (select 1 from analyticsflow_oltp.orders o where o.order_id = s.order_id)
+				  and exists (select 1 from analyticsflow_oltp.products p where p.product_id = s.product_id)
 				on conflict (order_item_id) do update set
 				    order_id = excluded.order_id,
 				    product_id = excluded.product_id,
@@ -562,9 +562,9 @@ public class StagingMigrationService {
 				           upper(replace(replace(trim(status), '-', '_'), ' ', '_')) as normalize_status,
 				           row_number() over (partition by transaction_id order by row_number) = 1 as first_row,
 				           source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ? as valid_created_at,
-				           exists (select 1 from orders o where o.order_id = s.order_id) as order_exists,
-				           exists (select 1 from users u where u.user_id = s.user_id) as user_exists
-				    from stg_transactions s
+				           exists (select 1 from analyticsflow_oltp.orders o where o.order_id = s.order_id) as order_exists,
+				           exists (select 1 from analyticsflow_oltp.users u where u.user_id = s.user_id) as user_exists
+				    from analyticsflow_staging.stg_transactions s
 				    where job_id = ? and is_valid = true
 				) s
 				where nullif(trim(transaction_id), '') is null
@@ -594,7 +594,7 @@ public class StagingMigrationService {
 	private int insertTransactions(String jobId) {
 		return jdbcTemplate.update(
 				"""
-				insert into transactions (
+				insert into analyticsflow_oltp.transactions (
 				    transaction_id, order_id, user_id, transaction_date, payment_method,
 				    amount, currency, status, created_at
 				)
@@ -606,7 +606,7 @@ public class StagingMigrationService {
 				            else replace(source_created_at, 'T', ' ')::timestamp end
 				from (
 				    select s.*, row_number() over (partition by transaction_id order by row_number) as duplicate_number
-				    from stg_transactions s
+				    from analyticsflow_staging.stg_transactions s
 				    where job_id = ? and is_valid = true
 				) s
 				where duplicate_number = 1
@@ -619,8 +619,8 @@ public class StagingMigrationService {
 				  and nullif(trim(currency), '') is not null
 				  and upper(replace(replace(trim(status), '-', '_'), ' ', '_')) in ('PENDING', 'SUCCESS', 'FAILED', 'EXPIRED', 'REFUNDED', 'CANCELLED')
 				  and (source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ?)
-				  and exists (select 1 from orders o where o.order_id = s.order_id)
-				  and exists (select 1 from users u where u.user_id = s.user_id)
+				  and exists (select 1 from analyticsflow_oltp.orders o where o.order_id = s.order_id)
+				  and exists (select 1 from analyticsflow_oltp.users u where u.user_id = s.user_id)
 				on conflict (transaction_id) do update set
 				    order_id = excluded.order_id,
 				    user_id = excluded.user_id,
@@ -661,8 +661,8 @@ public class StagingMigrationService {
 				           upper(replace(replace(trim(delivery_status), '-', '_'), ' ', '_')) as normalize_delivery_status,
 				           row_number() over (partition by delivery_id order by row_number) = 1 as first_row,
 				           source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ? as valid_created_at,
-				           exists (select 1 from orders o where o.order_id = s.order_id) as order_exists
-				    from stg_deliveries s
+				           exists (select 1 from analyticsflow_oltp.orders o where o.order_id = s.order_id) as order_exists
+				    from analyticsflow_staging.stg_deliveries s
 				    where job_id = ? and is_valid = true
 				) s
 				where nullif(trim(delivery_id), '') is null
@@ -688,7 +688,7 @@ public class StagingMigrationService {
 	private int insertDeliveries(String jobId) {
 		return jdbcTemplate.update(
 				"""
-				insert into deliveries (
+				insert into analyticsflow_oltp.deliveries (
 				    delivery_id, order_id, delivery_status, delivery_address, shipped_date,
 				    delivered_date, courier_name, created_at
 				)
@@ -704,7 +704,7 @@ public class StagingMigrationService {
 				            else replace(source_created_at, 'T', ' ')::timestamp end
 				from (
 				    select s.*, row_number() over (partition by delivery_id order by row_number) as duplicate_number
-				    from stg_deliveries s
+				    from analyticsflow_staging.stg_deliveries s
 				    where job_id = ? and is_valid = true
 				) s
 				where duplicate_number = 1
@@ -716,7 +716,7 @@ public class StagingMigrationService {
 				  and (delivered_date is null or trim(delivered_date) = '' or delivered_date ~ ?)
 				  and nullif(trim(courier_name), '') is not null
 				  and (source_created_at is null or trim(source_created_at) = '' or source_created_at ~ ?)
-				  and exists (select 1 from orders o where o.order_id = s.order_id)
+				  and exists (select 1 from analyticsflow_oltp.orders o where o.order_id = s.order_id)
 				on conflict (delivery_id) do update set
 				    order_id = excluded.order_id,
 				    delivery_status = excluded.delivery_status,
@@ -734,7 +734,7 @@ public class StagingMigrationService {
 
 	private int invalid(String sourceFile, String sourceTable, String selectSql, Object... arguments) {
 		String sql = """
-				insert into invalid_records (job_id, source_file, source_table, row_number, raw_payload, error_message)
+				insert into analyticsflow_support.invalid_records (job_id, source_file, source_table, row_number, raw_payload, error_message)
 				""" + selectSql;
 		return jdbcTemplate.update(sql, arguments);
 	}
