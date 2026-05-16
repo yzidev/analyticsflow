@@ -34,6 +34,13 @@ public class JobController {
 		return jobMonitoringService.startImport(request);
 	}
 
+	@PostMapping("/{jobId}/resume")
+	EtlJobResponse resumeImport(
+			@PathVariable String jobId,
+			@Valid @RequestBody(required = false) ImportJobRequest request) {
+		return jobMonitoringService.resumeImport(jobId, request);
+	}
+
 	@GetMapping
 	List<EtlJobResponse> jobs() {
 		return jobMonitoringService.listJobs();

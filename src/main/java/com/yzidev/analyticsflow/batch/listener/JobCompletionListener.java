@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.listener.JobExecutionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,8 @@ import com.yzidev.analyticsflow.repository.jpa.support.EtlJobRepository;
 
 @Component
 public class JobCompletionListener implements JobExecutionListener {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(JobCompletionListener.class);
 
 	private final EtlJobRepository etlJobRepository;
 	private final AnalyticsFlowMetrics metrics;
@@ -36,6 +40,12 @@ public class JobCompletionListener implements JobExecutionListener {
 		job.setStartedAt(jobExecution.getStartTime());
 		job.setUpdatedAt(LocalDateTime.now());
 		etlJobRepository.save(job);
+		LOGGER.info(
+				"etl_job_started jobId={} sampleDirectory={} writerStrategy={} chunkSize={}",
+				jobId,
+				jobExecution.getJobParameters().getString("sampleDirectory", "data/files"),
+				jobExecution.getJobParameters().getString("writerStrategy", "JPA"),
+				jobExecution.getJobParameters().getLong("chunkSize", 0L));
 		metrics.jobFinished(job.getStatus(), value(job.getProcessedRows()), job.getDurationMs());
 	}
 
@@ -57,6 +67,15 @@ public class JobCompletionListener implements JobExecutionListener {
 		job.setErrorMessage(errorMessage(jobExecution));
 		job.setUpdatedAt(LocalDateTime.now());
 		etlJobRepository.save(job);
+		LOGGER.info(
+				"etl_job_finished jobId={} status={} read={} written={} skipped={} durationMs={} error={}",
+				jobId,
+				job.getStatus(),
+				job.getProcessedRows(),
+				job.getSuccessRows(),
+				job.getFailedRows(),
+				job.getDurationMs(),
+				job.getErrorMessage());
 	}
 
 	private String jobId(JobExecution jobExecution) {

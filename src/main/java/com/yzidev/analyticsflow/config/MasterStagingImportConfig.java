@@ -3,6 +3,8 @@ package com.yzidev.analyticsflow.config;
 import java.nio.file.Path;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.repository.JobRepository;
@@ -16,13 +18,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.TransientDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.yzidev.analyticsflow.batch.listener.StepProgressListener;
 import com.yzidev.analyticsflow.batch.staging.CsvRow;
 import com.yzidev.analyticsflow.batch.staging.CsvStagingItemReader;
 import com.yzidev.analyticsflow.batch.staging.CsvStagingProcessor;
-import com.yzidev.analyticsflow.batch.staging.JpaRepositoryItemWriter;
+import com.yzidev.analyticsflow.batch.staging.StagingEntitySqlMappings;
+import com.yzidev.analyticsflow.batch.staging.StagingItemWriters;
 import com.yzidev.analyticsflow.common.enums.CsvDataset;
 import com.yzidev.analyticsflow.common.enums.EtlStepName;
 import com.yzidev.analyticsflow.entity.staging.BaseStagingEntity;
@@ -158,25 +162,47 @@ public class MasterStagingImportConfig {
 	}
 
 	@Bean
-	ItemWriter<UserStagingEntity> usersStagingWriter(UserStagingRepository repository) {
-		return new JpaRepositoryItemWriter<>(repository);
+	@StepScope
+	ItemWriter<UserStagingEntity> usersStagingWriter(
+			@Value("#{jobParameters['writerStrategy']}") String writerStrategy,
+			UserStagingRepository repository,
+			JdbcTemplate jdbcTemplate,
+			DataSource dataSource) {
+		return StagingItemWriters.create(writerStrategy, repository, jdbcTemplate, dataSource,
+				StagingEntitySqlMappings.users());
 	}
 
 	@Bean
+	@StepScope
 	ItemWriter<ProductCategoryStagingEntity> productCategoriesStagingWriter(
-			ProductCategoryStagingRepository repository) {
-		return new JpaRepositoryItemWriter<>(repository);
+			@Value("#{jobParameters['writerStrategy']}") String writerStrategy,
+			ProductCategoryStagingRepository repository,
+			JdbcTemplate jdbcTemplate,
+			DataSource dataSource) {
+		return StagingItemWriters.create(writerStrategy, repository, jdbcTemplate, dataSource,
+				StagingEntitySqlMappings.productCategories());
 	}
 
 	@Bean
-	ItemWriter<ProductStagingEntity> productsStagingWriter(ProductStagingRepository repository) {
-		return new JpaRepositoryItemWriter<>(repository);
+	@StepScope
+	ItemWriter<ProductStagingEntity> productsStagingWriter(
+			@Value("#{jobParameters['writerStrategy']}") String writerStrategy,
+			ProductStagingRepository repository,
+			JdbcTemplate jdbcTemplate,
+			DataSource dataSource) {
+		return StagingItemWriters.create(writerStrategy, repository, jdbcTemplate, dataSource,
+				StagingEntitySqlMappings.products());
 	}
 
 	@Bean
+	@StepScope
 	ItemWriter<ProductDetailStagingEntity> productDetailsStagingWriter(
-			ProductDetailStagingRepository repository) {
-		return new JpaRepositoryItemWriter<>(repository);
+			@Value("#{jobParameters['writerStrategy']}") String writerStrategy,
+			ProductDetailStagingRepository repository,
+			JdbcTemplate jdbcTemplate,
+			DataSource dataSource) {
+		return StagingItemWriters.create(writerStrategy, repository, jdbcTemplate, dataSource,
+				StagingEntitySqlMappings.productDetails());
 	}
 
 	private <T extends BaseStagingEntity> Step importStep(

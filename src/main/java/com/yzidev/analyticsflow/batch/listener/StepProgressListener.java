@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.listener.StepExecutionListener;
 import org.springframework.batch.core.step.StepExecution;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,8 @@ import com.yzidev.analyticsflow.repository.jpa.support.EtlJobStepRepository;
 
 @Component
 public class StepProgressListener implements StepExecutionListener {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(StepProgressListener.class);
 
 	private final EtlJobStepRepository etlJobStepRepository;
 	private final AnalyticsFlowMetrics metrics;
@@ -40,6 +44,7 @@ public class StepProgressListener implements StepExecutionListener {
 		step.setStartedAt(stepExecution.getStartTime());
 		step.setUpdatedAt(LocalDateTime.now());
 		etlJobStepRepository.save(step);
+		LOGGER.info("etl_step_started jobId={} step={}", jobId, stepName.name());
 	}
 
 	@Override
@@ -61,6 +66,16 @@ public class StepProgressListener implements StepExecutionListener {
 		step.setErrorMessage(errorMessage(stepExecution));
 		step.setUpdatedAt(LocalDateTime.now());
 		etlJobStepRepository.save(step);
+		LOGGER.info(
+				"etl_step_finished jobId={} step={} status={} read={} written={} skipped={} durationMs={} error={}",
+				jobId,
+				stepName.name(),
+				step.getStatus(),
+				stepExecution.getReadCount(),
+				stepExecution.getWriteCount(),
+				stepExecution.getSkipCount(),
+				step.getDurationMs(),
+				step.getErrorMessage());
 		metrics.stepFinished(stepName.name(), step.getStatus(), stepExecution.getReadCount(),
 				stepExecution.getWriteCount(), stepExecution.getSkipCount(), step.getDurationMs());
 		return stepExecution.getExitStatus();

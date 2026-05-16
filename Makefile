@@ -1,9 +1,11 @@
 APP_URL ?= http://localhost:8080
 CHUNK_SIZE ?= 5000
+WRITER_STRATEGY ?= jpa
 SAMPLE_DIR ?=
 REPORT_TYPE ?= SALES_PRODUCT_SUMMARY
 REPORT_FORMAT ?= CSV
 REPORT_ID ?=
+JOB_ID ?=
 BENCHMARK ?= blocking
 VUS ?= 100
 DURATION ?= 1m
@@ -17,7 +19,7 @@ SAMPLE_DIR_JSON := $(if $(strip $(SAMPLE_DIR)),"sampleDirectory":"$(SAMPLE_DIR)"
 IMPORT_SAMPLE_JSON := $(if $(strip $(SAMPLE_DIR)),"sampleDirectory":"$(SAMPLE_DIR)",)
 IMPORT_COMMA := $(if $(strip $(SAMPLE_DIR)),$(COMMA),)
 
-.PHONY: help test package run db-up db-down db-logs db-tables compose-up compose-up-detached compose-down compose-logs health metrics validate validate-sample import jobs reports report report-download benchmark benchmark-all clean-reports
+.PHONY: help test package run db-up db-down db-logs db-tables compose-up compose-up-detached compose-down compose-logs health metrics validate validate-sample import import-jpa import-jdbc import-copy import-resume jobs reports report report-download benchmark benchmark-all clean-reports
 
 help:
 	@printf '%s\n' 'AnalyticsFlow commands'
@@ -38,7 +40,14 @@ help:
 	@printf '%s\n' '  make validate               Validate default data/files directory'
 	@printf '%s\n' '  make validate SAMPLE_DIR=data/sample'
 	@printf '%s\n' '  make validate-sample        Validate data/sample'
-	@printf '%s\n' '  make import                 Start ETL with CHUNK_SIZE=5000'
+	@printf '%s\n' '  make import                 Start ETL with CHUNK_SIZE=5000 WRITER_STRATEGY=jpa'
+	@printf '%s\n' '  make import WRITER_STRATEGY=jdbc'
+	@printf '%s\n' '  make import WRITER_STRATEGY=copy'
+	@printf '%s\n' '  make import-jpa             Start ETL with JPA staging writer'
+	@printf '%s\n' '  make import-jdbc            Start ETL with JDBC batch staging writer'
+	@printf '%s\n' '  make import-copy            Start ETL with PostgreSQL COPY staging writer'
+	@printf '%s\n' '  make import-resume JOB_ID=<id>'
+	@printf '%s\n' '  make import-resume JOB_ID=<id> WRITER_STRATEGY=copy'
 	@printf '%s\n' '  make jobs                   List ETL jobs'
 	@printf '%s\n' '  make report                 Generate CSV report'
 	@printf '%s\n' '  make reports                List reports'
@@ -104,7 +113,23 @@ validate-sample:
 import:
 	curl -s -X POST "$(APP_URL)/api/jobs/import" \
 		-H 'Content-Type: application/json' \
-		-d '{$(IMPORT_SAMPLE_JSON)$(IMPORT_COMMA)"chunkSize":$(CHUNK_SIZE)}'
+		-d '{$(IMPORT_SAMPLE_JSON)$(IMPORT_COMMA)"chunkSize":$(CHUNK_SIZE),"writerStrategy":"$(WRITER_STRATEGY)"}'
+	@printf '\n'
+
+import-jpa:
+	$(MAKE) import WRITER_STRATEGY=jpa
+
+import-jdbc:
+	$(MAKE) import WRITER_STRATEGY=jdbc
+
+import-copy:
+	$(MAKE) import WRITER_STRATEGY=copy
+
+import-resume:
+	@test -n "$(JOB_ID)" || (printf '%s\n' 'JOB_ID is required. Example: make import-resume JOB_ID=<id>' && exit 1)
+	curl -s -X POST "$(APP_URL)/api/jobs/$(JOB_ID)/resume" \
+		-H 'Content-Type: application/json' \
+		-d '{"chunkSize":$(CHUNK_SIZE),"writerStrategy":"$(WRITER_STRATEGY)"}'
 	@printf '\n'
 
 jobs:

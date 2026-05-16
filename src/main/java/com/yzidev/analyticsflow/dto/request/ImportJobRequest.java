@@ -7,5 +7,6 @@ public record ImportJobRequest(
 		String sampleDirectory,
 		@Min(100)
 		@Max(100_000)
-		Integer chunkSize) {
+		Integer chunkSize,
+		String writerStrategy) {
 }

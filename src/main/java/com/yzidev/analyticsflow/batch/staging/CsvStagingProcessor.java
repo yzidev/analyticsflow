@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import com.yzidev.analyticsflow.common.enums.CsvDataset;
 import com.yzidev.analyticsflow.entity.staging.BaseStagingEntity;
@@ -50,7 +51,7 @@ public class CsvStagingProcessor<T extends BaseStagingEntity> implements ItemPro
 		entity.setCreatedAt(LocalDateTime.now());
 
 		if (errorMessage != null) {
-			invalidRecordRepository.save(toInvalidRecord(row, errorMessage));
+			saveInvalidRecord(row, errorMessage);
 		}
 
 		return entity;
@@ -74,5 +75,18 @@ public class CsvStagingProcessor<T extends BaseStagingEntity> implements ItemPro
 		invalidRecord.setErrorMessage(errorMessage);
 		invalidRecord.setCreatedAt(LocalDateTime.now());
 		return invalidRecord;
+	}
+
+	private void saveInvalidRecord(CsvRow row, String errorMessage) {
+		if (invalidRecordRepository.existsByJobIdAndSourceTableAndRowNumber(
+				jobId, row.dataset().stagingTable(), row.rowNumber())) {
+			return;
+		}
+		try {
+			invalidRecordRepository.save(toInvalidRecord(row, errorMessage));
+		}
+		catch (DataIntegrityViolationException ignored) {
+			// A restart can replay the last committed chunk; the unique guard keeps the row idempotent.
+		}
 	}
 }

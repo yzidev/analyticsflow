@@ -735,7 +735,9 @@ public class StagingMigrationService {
 	private int invalid(String sourceFile, String sourceTable, String selectSql, Object... arguments) {
 		String sql = """
 				insert into analyticsflow_support.invalid_records (job_id, source_file, source_table, row_number, raw_payload, error_message)
-				""" + selectSql;
+				""" + selectSql + """
+				on conflict (job_id, source_table, row_number) where row_number is not null do nothing
+				""";
 		return jdbcTemplate.update(sql, arguments);
 	}
 }

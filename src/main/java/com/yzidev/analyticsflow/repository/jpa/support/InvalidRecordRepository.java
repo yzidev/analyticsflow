@@ -12,5 +12,7 @@ public interface InvalidRecordRepository extends JpaRepository<InvalidRecordEnti
 
 	List<InvalidRecordEntity> findByJobIdAndSourceFile(String jobId, String sourceFile);
 
+	boolean existsByJobIdAndSourceTableAndRowNumber(String jobId, String sourceTable, Long rowNumber);
+
 	long countByJobId(String jobId);
 }

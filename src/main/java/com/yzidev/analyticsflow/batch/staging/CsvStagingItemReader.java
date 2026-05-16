@@ -9,10 +9,15 @@ import java.nio.file.Path;
 import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.batch.infrastructure.item.ItemStreamException;
 import org.springframework.batch.infrastructure.item.ItemStreamReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.yzidev.analyticsflow.common.enums.CsvDataset;
 
 public class CsvStagingItemReader implements ItemStreamReader<CsvRow> {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(CsvStagingItemReader.class);
+	private static final String LINE_NUMBER_KEY = "csv.lineNumber";
 
 	private final Path filePath;
 	private final CsvDataset dataset;
@@ -30,6 +35,16 @@ public class CsvStagingItemReader implements ItemStreamReader<CsvRow> {
 			reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8);
 			reader.readLine();
 			lineNumber = 1L;
+			long restartLineNumber = executionContext.getLong(LINE_NUMBER_KEY, lineNumber);
+			while (lineNumber < restartLineNumber && reader.readLine() != null) {
+				lineNumber++;
+			}
+			LOGGER.info(
+					"csv_reader_open file={} table={} restartLine={} currentLine={}",
+					dataset.fileName(),
+					dataset.stagingTable(),
+					restartLineNumber,
+					lineNumber);
 		}
 		catch (IOException exception) {
 			throw new ItemStreamException("Failed to open CSV file: " + filePath, exception);
@@ -48,6 +63,7 @@ public class CsvStagingItemReader implements ItemStreamReader<CsvRow> {
 
 	@Override
 	public void update(ExecutionContext executionContext) {
+		executionContext.putLong(LINE_NUMBER_KEY, lineNumber);
 	}
 
 	@Override

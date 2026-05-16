@@ -23,13 +23,13 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analyticsflow?currentSchema=analyticsflow_support,analyticsflow_staging,analyticsflow_oltp,analyticsflow_olap,public
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analyticsflow?currentSchema=analyticsflow_support,analyticsflow_staging,analyticsflow_oltp,analyticsflow_olap,public&reWriteBatchedInserts=true
       SPRING_DATASOURCE_USERNAME: analyticsflow
       SPRING_DATASOURCE_PASSWORD: analyticsflow
       SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/analyticsflow
       SPRING_R2DBC_USERNAME: analyticsflow
       SPRING_R2DBC_PASSWORD: analyticsflow
-      ANALYTICSFLOW_DB_BLOCKING_URL: jdbc:postgresql://postgres:5432/analyticsflow?currentSchema=analyticsflow_support,analyticsflow_staging,analyticsflow_oltp,analyticsflow_olap,public
+      ANALYTICSFLOW_DB_BLOCKING_URL: jdbc:postgresql://postgres:5432/analyticsflow?currentSchema=analyticsflow_support,analyticsflow_staging,analyticsflow_oltp,analyticsflow_olap,public&reWriteBatchedInserts=true
       ANALYTICSFLOW_DB_BLOCKING_USERNAME: analyticsflow
       ANALYTICSFLOW_DB_BLOCKING_PASSWORD: analyticsflow
       ANALYTICSFLOW_DB_REACTIVE_URL: r2dbc:postgresql://postgres:5432/analyticsflow
