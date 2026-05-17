@@ -7,6 +7,7 @@ REPORT_FORMAT ?= CSV
 REPORT_ID ?=
 JOB_ID ?=
 BENCHMARK ?= blocking
+BENCHMARK_SCRIPT ?= $(BENCHMARK)
 VUS ?= 100
 DURATION ?= 1m
 SLEEP_SECONDS ?= 1
@@ -25,7 +26,7 @@ SAMPLE_DIR_JSON := $(if $(strip $(SAMPLE_DIR)),"sampleDirectory":"$(SAMPLE_DIR)"
 IMPORT_SAMPLE_JSON := $(if $(strip $(SAMPLE_DIR)),"sampleDirectory":"$(SAMPLE_DIR)",)
 IMPORT_COMMA := $(if $(strip $(SAMPLE_DIR)),$(COMMA),)
 
-.PHONY: help test package run db-up db-down db-logs db-tables compose-up compose-up-detached compose-down compose-logs health metrics validate validate-sample import import-jpa import-jdbc import-copy import-resume jobs reports report report-download benchmark benchmark-save benchmark-save-stats benchmark-all benchmark-all-save benchmark-all-save-stats benchmark-repeat-save-stats benchmark-compare clean-reports
+.PHONY: help test package run db-up db-down db-logs db-tables compose-up compose-up-detached compose-down compose-logs health metrics validate validate-sample import import-jpa import-jdbc import-copy import-resume jobs reports report report-download benchmark benchmark-save benchmark-save-stats benchmark-all benchmark-all-save benchmark-all-save-stats benchmark-repeat-save-stats benchmark-export-repeat-save-stats benchmark-compare clean-reports
 
 help:
 	@printf '%s\n' 'AnalyticsFlow commands'
@@ -69,6 +70,7 @@ help:
 	@printf '%s\n' '  make benchmark-all-save'
 	@printf '%s\n' '  make benchmark-all-save-stats'
 	@printf '%s\n' '  make benchmark-repeat-save-stats BENCHMARK_RUNS=3'
+	@printf '%s\n' '  make benchmark-export-repeat-save-stats BENCHMARK_RUNS=3'
 	@printf '%s\n' '  make benchmark-compare'
 
 test:
@@ -177,7 +179,8 @@ benchmark-save-stats:
 	BENCHMARK="$(BENCHMARK)" APP_URL="$(APP_URL)" VUS="$(VUS)" DURATION="$(DURATION)" SLEEP_SECONDS="$(SLEEP_SECONDS)" \
 	P95_THRESHOLD='$(P95_THRESHOLD)' P99_THRESHOLD='$(P99_THRESHOLD)' ERROR_RATE_THRESHOLD='$(ERROR_RATE_THRESHOLD)' \
 	BENCHMARK_RESULTS_DIR="$(BENCHMARK_RESULTS_DIR)" BENCHMARK_RESULT_FILE="$(BENCHMARK_RESULT_FILE)" \
-	BENCHMARK_STATS_FILE="$(BENCHMARK_STATS_FILE)" STATS_INTERVAL_SECONDS="$(STATS_INTERVAL_SECONDS)" \
+	BENCHMARK_STATS_FILE="$(BENCHMARK_STATS_FILE)" BENCHMARK_SCRIPT="$(BENCHMARK_SCRIPT)" \
+	STATS_INTERVAL_SECONDS="$(STATS_INTERVAL_SECONDS)" REPORT_TYPE="$(REPORT_TYPE)" REPORT_FORMAT="$(REPORT_FORMAT)" \
 	bash benchmark/run-with-stats.sh
 
 benchmark-all:
@@ -209,6 +212,17 @@ benchmark-repeat-save-stats:
 		run=$$((run + 1)); \
 	done
 	$(MAKE) benchmark-compare BENCHMARK_COMPARE_RUNS="$(BENCHMARK_RUNS)"
+
+benchmark-export-repeat-save-stats:
+	@run=1; while [ $$run -le "$(BENCHMARK_RUNS)" ]; do \
+		printf '%s\n' "Report export benchmark suite run $$run/$(BENCHMARK_RUNS)"; \
+		$(MAKE) benchmark-save-stats BENCHMARK_RESULTS_DIR=data/benchmark-export-results BENCHMARK=blocking BENCHMARK_SCRIPT=export-blocking || true; \
+		$(MAKE) benchmark-save-stats BENCHMARK_RESULTS_DIR=data/benchmark-export-results BENCHMARK=virtual-thread BENCHMARK_SCRIPT=export-virtual-thread || true; \
+		$(MAKE) benchmark-save-stats BENCHMARK_RESULTS_DIR=data/benchmark-export-results BENCHMARK=completable-future BENCHMARK_SCRIPT=export-completable-future || true; \
+		$(MAKE) benchmark-save-stats BENCHMARK_RESULTS_DIR=data/benchmark-export-results BENCHMARK=reactive BENCHMARK_SCRIPT=export-reactive || true; \
+		run=$$((run + 1)); \
+	done
+	$(MAKE) benchmark-compare BENCHMARK_RESULTS_DIR=data/benchmark-export-results BENCHMARK_COMPARE_RUNS="$(BENCHMARK_RUNS)"
 
 benchmark-compare:
 	BENCHMARK_RESULTS_DIR="$(BENCHMARK_RESULTS_DIR)" BENCHMARK_COMPARE_RUNS="$(BENCHMARK_COMPARE_RUNS)" node benchmark/compare-results.js

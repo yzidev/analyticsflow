@@ -56,6 +56,35 @@ export function runBenchmark(strategy, expectedStrategy, path) {
   sleep(numberEnv('SLEEP_SECONDS', DEFAULT_SLEEP_SECONDS));
 }
 
+export function runExportBenchmark(strategy, expectedStrategy, path) {
+  const reportType = __ENV.REPORT_TYPE || 'SALES_PRODUCT_SUMMARY';
+  const format = __ENV.REPORT_FORMAT || 'CSV';
+  const url = `${__ENV.BASE_URL || DEFAULT_BASE_URL}${path}?reportType=${reportType}&format=${format}`;
+  const response = http.get(url, {
+    tags: {
+      strategy,
+      endpoint: path,
+      benchmark_kind: 'export',
+    },
+  });
+
+  const payload = json(response);
+  const success = check(response, {
+    'status is 200': (res) => res.status === 200,
+    'strategy matches': () => payload && payload.strategy === expectedStrategy,
+    'processing time exists': () => payload && Number.isFinite(payload.processingTimeMs),
+    'database profile exists': () => payload && Boolean(payload.databaseProfile),
+    'file size exists': () => payload && Number.isFinite(payload.fileSizeBytes),
+  });
+
+  benchmarkSuccess.add(success);
+  if (payload && Number.isFinite(payload.processingTimeMs)) {
+    appProcessingTime.add(payload.processingTimeMs, { strategy, benchmark_kind: 'export' });
+  }
+
+  sleep(numberEnv('SLEEP_SECONDS', DEFAULT_SLEEP_SECONDS));
+}
+
 function json(response) {
   try {
     return response.json();

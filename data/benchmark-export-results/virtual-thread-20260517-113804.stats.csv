@@ -1,0 +1,27 @@
+timestamp,container,cpu_percent,mem_percent,mem_usage
+2026-05-17T04:38:04Z,analyticsflow-app,452.79%,16.92%,1.295GiB / 7.653GiB
+2026-05-17T04:38:04Z,analyticsflow-postgres,786.10%,12.14%,951.7MiB / 7.653GiB
+2026-05-17T04:38:08Z,analyticsflow-app,370.39%,18.36%,1.405GiB / 7.653GiB
+2026-05-17T04:38:08Z,analyticsflow-postgres,730.66%,13.24%,1.013GiB / 7.653GiB
+2026-05-17T04:38:13Z,analyticsflow-app,429.73%,20.28%,1.552GiB / 7.653GiB
+2026-05-17T04:38:13Z,analyticsflow-postgres,739.77%,13.61%,1.042GiB / 7.653GiB
+2026-05-17T04:38:17Z,analyticsflow-app,551.21%,20.27%,1.551GiB / 7.653GiB
+2026-05-17T04:38:17Z,analyticsflow-postgres,290.12%,13.04%,1022MiB / 7.653GiB
+2026-05-17T04:38:21Z,analyticsflow-app,360.81%,20.26%,1.551GiB / 7.653GiB
+2026-05-17T04:38:21Z,analyticsflow-postgres,693.37%,13.21%,1.011GiB / 7.653GiB
+2026-05-17T04:38:25Z,analyticsflow-app,547.14%,20.25%,1.55GiB / 7.653GiB
+2026-05-17T04:38:25Z,analyticsflow-postgres,759.79%,13.50%,1.033GiB / 7.653GiB
+2026-05-17T04:38:29Z,analyticsflow-app,297.88%,20.25%,1.55GiB / 7.653GiB
+2026-05-17T04:38:29Z,analyticsflow-postgres,803.39%,13.63%,1.043GiB / 7.653GiB
+2026-05-17T04:38:33Z,analyticsflow-app,277.63%,23.65%,1.81GiB / 7.653GiB
+2026-05-17T04:38:33Z,analyticsflow-postgres,886.46%,13.55%,1.037GiB / 7.653GiB
+2026-05-17T04:38:38Z,analyticsflow-app,409.08%,25.88%,1.98GiB / 7.653GiB
+2026-05-17T04:38:38Z,analyticsflow-postgres,785.06%,13.66%,1.045GiB / 7.653GiB
+2026-05-17T04:38:42Z,analyticsflow-app,503.48%,25.91%,1.983GiB / 7.653GiB
+2026-05-17T04:38:42Z,analyticsflow-postgres,488.93%,13.39%,1.025GiB / 7.653GiB
+2026-05-17T04:38:47Z,analyticsflow-app,331.42%,25.47%,1.949GiB / 7.653GiB
+2026-05-17T04:38:47Z,analyticsflow-postgres,756.78%,13.81%,1.057GiB / 7.653GiB
+2026-05-17T04:38:51Z,analyticsflow-app,370.82%,25.41%,1.945GiB / 7.653GiB
+2026-05-17T04:38:51Z,analyticsflow-postgres,847.96%,14.23%,1.089GiB / 7.653GiB
+2026-05-17T04:38:55Z,analyticsflow-app,299.12%,25.37%,1.942GiB / 7.653GiB
+2026-05-17T04:38:55Z,analyticsflow-postgres,882.64%,14.62%,1.119GiB / 7.653GiB

@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.yzidev.analyticsflow.common.enums.ReportType;
 
@@ -22,22 +25,28 @@ import com.yzidev.analyticsflow.common.enums.ReportType;
 public class CsvReportGenerator {
 
 	private final JdbcTemplate jdbcTemplate;
+	private final TransactionTemplate transactionTemplate;
 
-	public CsvReportGenerator(JdbcTemplate jdbcTemplate) {
+	public CsvReportGenerator(JdbcTemplate jdbcTemplate, PlatformTransactionManager transactionManager) {
 		this.jdbcTemplate = jdbcTemplate;
+		this.transactionTemplate = new TransactionTemplate(transactionManager);
+		this.transactionTemplate.setReadOnly(true);
+		this.transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 	}
 
 	public void generate(Path reportPath, ReportType reportType, LocalDate startDate, LocalDate endDate)
 			throws IOException {
 		try (BufferedWriter writer = Files.newBufferedWriter(reportPath, StandardCharsets.UTF_8)) {
-			switch (reportType) {
-				case SALES_DAILY_SUMMARY -> generateSalesDailySummary(writer, startDate, endDate);
-				case SALES_PRODUCT_SUMMARY -> generateSalesProductSummary(writer);
-				case SALES_CUSTOMER_SUMMARY -> generateSalesCustomerSummary(writer);
-				case DELIVERY_PERFORMANCE_SUMMARY -> generateDeliveryPerformanceSummary(writer, startDate, endDate);
-				case PAYMENT_METHOD_SUMMARY -> generatePaymentMethodSummary(writer, startDate, endDate);
-				case CHANNEL_SALES_SUMMARY -> generateChannelSalesSummary(writer, startDate, endDate);
-			}
+			transactionTemplate.executeWithoutResult(status -> {
+				switch (reportType) {
+					case SALES_DAILY_SUMMARY -> generateSalesDailySummary(writer, startDate, endDate);
+					case SALES_PRODUCT_SUMMARY -> generateSalesProductSummary(writer);
+					case SALES_CUSTOMER_SUMMARY -> generateSalesCustomerSummary(writer);
+					case DELIVERY_PERFORMANCE_SUMMARY -> generateDeliveryPerformanceSummary(writer, startDate, endDate);
+					case PAYMENT_METHOD_SUMMARY -> generatePaymentMethodSummary(writer, startDate, endDate);
+					case CHANNEL_SALES_SUMMARY -> generateChannelSalesSummary(writer, startDate, endDate);
+				}
+			});
 		}
 		catch (UncheckedIOException exception) {
 			throw exception.getCause();

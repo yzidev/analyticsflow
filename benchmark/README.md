@@ -65,6 +65,15 @@ make benchmark-repeat-save-stats BENCHMARK_RUNS=3
 make benchmark-repeat-save-stats BENCHMARK_RUNS=5
 ```
 
+The commands above benchmark the report summary JSON endpoints. To benchmark the actual CSV report export path, use:
+
+```bash
+make benchmark-export-repeat-save-stats BENCHMARK_RUNS=3 REPORT_TYPE=SALES_PRODUCT_SUMMARY
+make benchmark-export-repeat-save-stats BENCHMARK_RUNS=5 REPORT_TYPE=SALES_PRODUCT_SUMMARY
+```
+
+Export benchmark files are stored under `data/benchmark-export-results` and use temp CSV files that are deleted after each request, so repeated runs do not fill `data/reports`.
+
 This writes paired files like:
 
 - `data/benchmark-results/blocking-20260517-031015.json`

@@ -3,6 +3,7 @@ set -u
 
 results_dir="${BENCHMARK_RESULTS_DIR:-data/benchmark-results}"
 benchmark="${BENCHMARK:-blocking}"
+benchmark_script="${BENCHMARK_SCRIPT:-${benchmark}}"
 result_file="${BENCHMARK_RESULT_FILE:-${results_dir}/${benchmark}-$(date +%Y%m%d-%H%M%S).json}"
 stats_file="${BENCHMARK_STATS_FILE:-${result_file%.json}.stats.csv}"
 stats_interval="${STATS_INTERVAL_SECONDS:-2}"
@@ -42,7 +43,7 @@ SLEEP_SECONDS="${SLEEP_SECONDS:-1}" \
 P95_THRESHOLD="${P95_THRESHOLD:-p(95)<2000}" \
 P99_THRESHOLD="${P99_THRESHOLD:-p(99)<5000}" \
 ERROR_RATE_THRESHOLD="${ERROR_RATE_THRESHOLD:-rate<0.01}" \
-k6 run --summary-export "${result_file}" "benchmark/${benchmark}.js"
+k6 run --summary-export "${result_file}" "benchmark/${benchmark_script}.js"
 status="$?"
 
 cleanup
